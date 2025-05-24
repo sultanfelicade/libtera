@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LibTera - SMKN Tambelangan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              poppins: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+      .animate-marquee {
+        display: inline-block;
+        padding-left: 100%;
+        animation: marquee 15s linear infinite;
+      }
+      @keyframes marquee {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-100%); }
+      }
+    </style>
+  </head>
+  <body class="bg-white text-gray-800">
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-3">
+            <img src="assets/logoFooter.png" alt="LibTera Logo" class="h-10 w-auto" />
+          </div>
+          <div class="lg:hidden">
+            <button id="menu-toggle" class="text-2xl">☰</button>
+          </div>
+          <div id="menu" class="hidden lg:flex gap-6 text-sm">
+            <a href="#beranda" class="hover:text-blue-600 font-medium">Beranda</a>
+            <a href="#layanan" class="hover:text-blue-600 font-medium">Layanan</a>
+            <a href="#tentang" class="hover:text-blue-600 font-medium">Tentang</a>
+            <a href="#kontak" class="hover:text-blue-600 font-medium">Kontak</a>
+          </div>
+        </div>
+        <div id="mobile-menu" class="lg:hidden hidden flex-col mt-2 space-y-2">
+          <a href="#beranda" class="block px-4 py-2 hover:bg-blue-100">Beranda</a>
+          <a href="#layanan" class="block px-4 py-2 hover:bg-blue-100">Layanan</a>
+          <a href="#tentang" class="block px-4 py-2 hover:bg-blue-100">Tentang</a>
+          <a href="#kontak" class="block px-4 py-2 hover:bg-blue-100">Kontak</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="beranda" class="scroll-mt-16 pt-28 pb-20 bg-gradient-to-r from-cyan-100 via-white to-blue-100">
+      <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-10">
+        <div class="w-full md:w-1/2">
+          <h1 class="typewriter text-4xl md:text-5xl font-bold leading-snug min-h-[6rem] break-words"></h1>
+          <div class="overflow-hidden h-6 mt-4 mb-6">
+          </div>
+          <a href="login.php" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded shadow hover:scale-105 active:scale-95 transition-transform">
+            Mulai Sekarang
+          </a>
+        </div>
+        <div class="w-full md:w-1/2 flex justify-center">
+          <img src="assets/foto1.png" alt="Hero Image" class="w-full max-w-[400px] md:max-w-[450px] h-auto object-contain drop-shadow-lg" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Layanan -->
+    <section id="layanan" class="scroll-mt-16 py-16 bg-white">
+      <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center text-blue-700 mb-10">Nikmati Layanan LibTera</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-gray-100 p-6 rounded-xl shadow text-center">
+            <h3 class="text-xl font-semibold text-blue-600 mb-2">Sirkulasi</h3>
+            <p>Layanan peminjaman, perpanjangan, dan pengembalian buku.</p>
+          </div>
+          <div class="bg-orange-100 p-6 rounded-xl shadow text-center">
+            <h3 class="text-xl font-semibold text-orange-600 mb-2">Referensi</h3>
+            <p>Koleksi referensi untuk dibaca di tempat.</p>
+          </div>
+          <div class="bg-green-100 p-6 rounded-xl shadow text-center">
+            <h3 class="text-xl font-semibold text-green-600 mb-2">Digital Library</h3>
+            <p>Akses koleksi digital kapan saja, di mana saja.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tentang -->
+    <section id="tentang" class="scroll-mt-16 py-16 bg-gray-100">
+      <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div>
+          <h3 class="text-2xl font-bold text-blue-600 mb-4">Tentang Kami</h3>
+          <p class="text-gray-700">
+            LibTera adalah sistem perpustakaan digital SMKN Tambelangan. Dengan LibTera, siswa dapat mencari, meminjam,
+            dan mengembalikan buku secara efisien melalui platform daring. Kami menyediakan layanan referensi,
+            sirkulasi, serta akses digital library.
+          </p>
+        </div>
+        <div class="flex justify-center md:justify-end">
+          <img src="assets/foto2.png" class="max-w-[420px] w-full h-auto object-contain rounded-lg shadow" alt="Tentang Kami" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Kontak -->
+    <section id="kontak" class="scroll-mt-16 py-16 bg-white">
+      <div class="max-w-7xl mx-auto px-4">
+        <h3 class="text-2xl font-bold text-center text-blue-600 mb-6">Hubungi Kami</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <p><strong>Alamat:</strong> Jl. KH. Alinurudin, Dajaan Timur, Tambelangan, Sampang</p>
+            <p><strong>Email:</strong> libtera@smkntambelangan.sch.id</p>
+          </div>
+          <div>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3959.5722888060754!2d113.16754517475833!3d-7.059436092942987!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7870451ba4609%3A0x41c7233c8df2f680!2sSMK%20NEGERI%201%20TAMBELANGAN!5e0!3m2!1sid!2sid!4v1748029768878!5m2!1sid!2sid"
+              width="100%" height="250" style="border: 0" allowfullscreen="" loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade" class="rounded shadow">
+            </iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white text-center py-6">
+      <p>© 2025 LibTera - SMKN Tambelangan.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+      const toggle = document.getElementById("menu-toggle");
+      const mobileMenu = document.getElementById("mobile-menu");
+      toggle?.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
+      });
+    </script>
+    <script src="typing.js"></script>
+  </body>
+</html>

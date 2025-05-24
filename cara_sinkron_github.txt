@@ -13,3 +13,6 @@ git commit -m "komentar anda"
 
 #UNTUK UPLOAD PERUBAHAN YANG KAMU BUAT KE GITHUB
 git push origin main
+
+
+FAHAMM

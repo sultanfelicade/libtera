@@ -22,15 +22,6 @@
       body {
         font-family: "Poppins", sans-serif;
       }
-      .animate-marquee {
-        display: inline-block;
-        padding-left: 100%;
-        animation: marquee 15s linear infinite;
-      }
-      @keyframes marquee {
-        0% { transform: translateX(0%); }
-        100% { transform: translateX(-100%); }
-      }
     </style>
   </head>
   <body class="bg-white text-gray-800">
@@ -65,9 +56,8 @@
       <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-10">
         <div class="w-full md:w-1/2">
           <div class="relative h-[10rem]">
-            <h1 class="typewriter text-4xl md:text-5xl font-bold leading-snug tracking-wide text-gray-900 drop-shadow-xl break-words absolute top-0 left-0 w-full font-montserrat"></h1>
+            <h1 class="typewriter text-4xl md:text-5xl font-bold leading-snug tracking-wide text-gray-900 drop-shadow-xl break-words absolute top-0 left-0 w-full"></h1>
           </div>
-          <br>
           <a href="login.php" class="mt-6 inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded shadow hover:scale-105 active:scale-95 transition-transform">
             Mulai Sekarang
           </a>
@@ -105,8 +95,7 @@
         <div>
           <h3 class="text-2xl font-bold text-blue-600 mb-4">Tentang Kami</h3>
           <p class="text-gray-700">
-            LibTera adalah sistem perpustakaan digital SMKN Tambelangan. Dengan LibTera, siswa dapat mencari, meminjam, dan mengembalikan buku secara efisien melalui platform daring. Kami menyediakan layanan referensi, sirkulasi, serta akses digital library.
-            Sistem ini juga dilengkapi berbagai fitur penting seperti pencarian buku, manajemen anggota dan koleksi, perhitungan durasi pinjam dan denda, serta akses digital library yang dapat digunakan kapan saja dan di mana saja. Dengan hadirnya LibTera, diharapkan dapat mendorong peningkatan literasi dan minat baca siswa SMKN Tambelangan.
+            LibTera adalah sistem perpustakaan digital SMKN Tambelangan. Siswa dapat mencari, meminjam, dan mengembalikan buku melalui platform daring. Sistem ini juga menyediakan fitur seperti pencarian buku, manajemen koleksi, dan akses digital library.
           </p>
         </div>
         <div class="flex justify-center md:justify-end">
@@ -123,11 +112,17 @@
           <div>
             <p><strong>Alamat:</strong> Jl. KH. Alinurudin, Dajaan Timur, Tambelangan, Sampang</p>
             <p><strong>Email:</strong> libtera@smkntambelangan.sch.id</p>
+            <p class="mt-4"><strong>Jam Operasional:</strong> Senin – Jumat, 08.00 – 15.00 WIB</p>
+            <div class="flex gap-4 mt-4">
+              <a href="#" target="_blank"><i class="fab fa-facebook text-blue-600 text-2xl"></i></a>
+              <a href="#" target="_blank"><i class="fab fa-instagram text-pink-500 text-2xl"></i></a>
+              <a href="#" target="_blank"><i class="fab fa-whatsapp text-green-500 text-2xl"></i></a>
+            </div>
           </div>
           <div>
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3959.5722888060754!2d113.16754517475833!3d-7.059436092942987!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7870451ba4609%3A0x41c7233c8df2f680!2sSMK%20NEGERI%201%20TAMBELANGAN!5e0!3m2!1sid!2sid!4v1748029768878!5m2!1sid!2sid"
-              width="100%" height="250" style="border: 0" allowfullscreen="" loading="lazy"
+              src="https://www.google.com/maps/embed?pb=!1m18..."
+              width="100%" height="250" style="border:0" allowfullscreen="" loading="lazy"
               referrerpolicy="no-referrer-when-downgrade" class="rounded shadow">
             </iframe>
           </div>
@@ -142,10 +137,8 @@
 
     <!-- Scripts -->
     <script>
-      const toggle = document.getElementById("menu-toggle");
-      const mobileMenu = document.getElementById("mobile-menu");
-      toggle?.addEventListener("click", () => {
-        mobileMenu.classList.toggle("hidden");
+      document.getElementById("menu-toggle")?.addEventListener("click", () => {
+        document.getElementById("mobile-menu")?.classList.toggle("hidden");
       });
     </script>
     <script src="typing.js?v=2"></script>

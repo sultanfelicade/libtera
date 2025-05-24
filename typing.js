@@ -1,4 +1,5 @@
-const text = "Selamat Datang di Portal Perpustakaan Digital LibTera SMK Negeri Tambelangan";
+const text =
+  "Selamat Datang di Portal Perpustakaan Digital LibTera ";
 let index = 0;
 let isDeleting = false;
 let currentText = "";
@@ -24,7 +25,7 @@ function typeWriter() {
   }
 
   element.textContent = currentText;
-  setTimeout(typeWriter, isDeleting ? 80 : 120); // kecepatan ngetik & hapus
+  setTimeout(typeWriter, isDeleting ? 80 : 120);
 }
 
 document.addEventListener("DOMContentLoaded", typeWriter);

@@ -9,7 +9,6 @@ if (!isset($_SESSION["login"]) || $_SESSION["role"] !== "siswa") {
 ?>
 
 <?php include_once __DIR__ . '/../../layout/header.php'; ?>
-<?php include_once __DIR__ . '/../../layout/sidebar.php'; ?>
 <body>
   <div class="container mt-5 pt-5">
     <?php

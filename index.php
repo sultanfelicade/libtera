@@ -13,7 +13,8 @@ if (isset($_POST['signIn'])) {
     if ($password === $data['password']) {
       $_SESSION['login'] = true;
       $_SESSION['role'] = 'siswa';
-      $_SESSION['siswa'] = $data; 
+      $_SESSION['siswa'] = $data;             // Simpan data siswa lengkap
+      $_SESSION['id_siswa'] = $data['id_siswa']; // Simpan id_siswa langsung untuk kemudahan akses
       header("Location: /libtera/Dashboard/Siswa/index.php");
       exit;
     }
@@ -26,7 +27,7 @@ if (isset($_POST['signIn'])) {
     if ($password === $data['password']) {
       $_SESSION['login'] = true;
       $_SESSION['role'] = 'admin';
-      $_SESSION['admin'] = $data; 
+      $_SESSION['admin'] = $data;
       header("Location: /libtera/Dashboard/Admin/index.php");
       exit;
     }
@@ -38,7 +39,7 @@ if (isset($_POST['signIn'])) {
   exit;
 }
 
-// Jika sudah login, redirect sesuai role
+// Redirect jika sudah login dan akses langsung ke index.php
 if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
   if ($_SESSION['role'] === 'siswa') {
     header("Location: /libtera/Dashboard/Siswa/index.php");
@@ -49,6 +50,6 @@ if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
   }
 }
 
-// Kalau tidak login dan tidak submit, redirect ke login
+// Jika belum login dan tidak submit, redirect ke login form
 header("Location: login.php");
 exit;

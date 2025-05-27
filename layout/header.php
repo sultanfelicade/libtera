@@ -44,10 +44,10 @@ $role = $_SESSION["role"];
       <div class="offcanvas-body">
         <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
           <?php if ($role === 'siswa'): ?>
-            <li class="nav-item"><a class="nav-link" href="/libtera/siswa/buku.php"><i class="fa-solid fa-book"></i> Buku</a></li>
-            <li class="nav-item"><a class="nav-link" href="/libtera/siswa/ebook.php"><i class="fa-solid fa-book-open"></i> Ebook</a></li>
-            <li class="nav-item"><a class="nav-link" href="/libtera/siswa/peminjaman.php"><i class="fas fa-handshake"></i> Peminjaman</a></li>
-            <li class="nav-item"><a class="nav-link" href="/libtera/siswa/denda.php"><i class="fa-solid fa-money-bill-1-wave"></i> Denda</a></li>
+            <li class="nav-item"><a class="nav-link" href="/libtera/Dashboard/siswa/index.php"><i class="fa-solid fa-book"></i> Buku</a></li>
+            <li class="nav-item"><a class="nav-link" href="/libtera/Dashboard/siswa/ebook.php"><i class="fa-solid fa-book-open"></i> Ebook</a></li>
+            <li class="nav-item"><a class="nav-link" href="/libtera/Dashboard/Siswa/formPeminjaman/Transaksipeminjaman.php"><i class="fas fa-handshake"></i> Peminjaman</a></li>
+            <li class="nav-item"><a class="nav-link" href="/libtera/Dashboard/Siswa/formPeminjaman/denda.php"><i class="fa-solid fa-money-bill-1-wave"></i> Denda</a></li>
           <?php elseif ($role === 'admin'): ?>
             <li class="nav-item"><a class="nav-link" href="/libtera/admin/kelola_buku.php"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
             <li class="nav-item"><a class="nav-link" href="/libtera/admin/kelola_ebook.php"><i class="fa-solid fa-book-open"></i> Kelola Ebook</a></li>

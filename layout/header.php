@@ -24,7 +24,7 @@ $role = $_SESSION["role"];
     }
   </style>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
@@ -63,7 +63,7 @@ $role = $_SESSION["role"];
             <?php echo $role === "admin" ? $_SESSION["admin"]["nama_admin"] : $_SESSION["siswa"]["nama"]; ?>
           </div>
           <div class="text-muted mb-2"><?php echo ucfirst($role); ?></div>
-          <a class="btn btn-danger btn-sm" href="/libtera/signOut.php">
+          <a class="btn btn-danger btn-sm" href="/libtera/logout.php">
             Sign Out <i class="fa-solid fa-right-to-bracket"></i>
           </a>
         </div>

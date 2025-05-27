@@ -1,5 +1,5 @@
 <!-- layout/footer.php -->
-<footer class="bg-dark text-light mt-5 shadow-sm">
+<footer class="bg-dark text-light mt-auto shadow-sm">
   <div class="container-fluid px-4 py-3">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
       

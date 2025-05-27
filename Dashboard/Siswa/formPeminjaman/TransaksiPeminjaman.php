@@ -27,7 +27,7 @@ $nama_siswa = $siswaData['nama'];
 
 // Query peminjaman sesuai id_siswa
 $sql = "SELECT 
-    p.id_peminjaman, p.id_buku, b.judul, s.nisn, s.nama, a.nama_admin, p.tgl_pinjam, p.tgl_kembali
+    p.id_peminjaman, p.id_buku, b.judul, s.nama, a.nama_admin, p.tgl_pinjam, p.tgl_kembali
 FROM 
     peminjaman p
 INNER JOIN buku b ON p.id_buku = b.id_buku
@@ -40,15 +40,13 @@ $stmt2 = $connect->prepare($sql);
 $stmt2->bind_param("i", $id_siswa);
 $stmt2->execute();
 $dataPinjam = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
-
+include_once '../../../layout/header.php'; 
 ?>
 
-<body>
-  <?php include_once '../../../layout/header.php'; ?>
 
 <div class="container p-4 mt-5">
-  <div class="alert alert-primary mt-5" role="alert">
-    Riwayat transaksi Peminjaman Buku - <span class="fw-bold text-capitalize"><?= htmlentities($nama_siswa); ?></span>
+  <div class="text-4xl font-extrabold bg-gradient-to-r from-blue-400 via-blue-600 to-pink-500 bg-clip-text text-transparent mb-3">
+    Riwayat transaksi Peminjaman Buku
   </div>
 
   <!-- Ini bagian responsif tabel -->
@@ -59,12 +57,9 @@ $dataPinjam = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
           <th>Id Peminjaman</th>
           <th>Id Buku</th>
           <th>Judul Buku</th>
-          <th>NISN</th>
-          <th>Nama</th>
-          <th>Nama Admin</th>
           <th>Tanggal Peminjaman</th>
           <th>Tanggal Pengembalian</th>
-          <th>Aksi</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
@@ -73,16 +68,18 @@ $dataPinjam = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
             <td><?= $item["id_peminjaman"]; ?></td>
             <td><?= $item["id_buku"]; ?></td>
             <td><?= htmlspecialchars($item["judul"]); ?></td>
-            <td><?= $item["nisn"]; ?></td>
-            <td><?= htmlspecialchars($item["nama"]); ?></td>
-            <td><?= htmlspecialchars($item["nama_admin"]); ?></td>
             <td><?= $item["tgl_pinjam"]; ?></td>
-            <td><?= $item["tgl_kembali"] ?: "<em>Belum dikembalikan</em>"; ?></td>
+            <td><?= $item["tgl_kembali"] ?: "<em>-</em>"; ?></td>
             <td>
               <?php if (empty($item["tgl_kembali"])): ?>
-                <a class="btn btn-success btn-sm" href="pengembalianBuku.php?id=<?= $item["id_peminjaman"]; ?>">Kembalikan</a>
+                <span class="badge bg-danger">Belum Dikembalikan</span>
+              <?php elseif (empty($item['tgl_pinjam'])): ?>
+                <span class="badge bg-secondary">Pending </span>
+                <a href="#" class="badge bg-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Batalkan">
+                  Batalkan
+                </a>
               <?php else: ?>
-                <span class="badge bg-success">Selesai</span>
+                <span class="badge bg-success">Dikembalikan</span>
               <?php endif; ?>
             </td>
           </tr>
@@ -93,7 +90,11 @@ $dataPinjam = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
 
 </div>
 
+<script>
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+</script>
+
+
 
 <?php include_once '../../../layout/footer.php'; ?>
-</body>
-</html>

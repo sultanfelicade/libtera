@@ -1,10 +1,7 @@
 <?php 
 session_start();
+$title = "Riwayat Peminjaman - Libtera";
 
-if (!isset($_SESSION["login"]) || $_SESSION["role"] !== "siswa") {
-  header("Location: /libtera/login.php");
-  exit;
-}
 require "../../../connect.php";
 
 $akunMember = $_SESSION["siswa"]["nisn"];

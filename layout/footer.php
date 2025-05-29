@@ -1,22 +1,18 @@
-<!-- layout/footer.php -->
-<footer class="bg-dark text-light mt-auto shadow-sm">
+</main> <footer class="bg-light text-dark mt-auto shadow-sm">
   <div class="container-fluid px-4 py-3">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
       
-      <!-- Kiri: Logo & Nama -->
       <div class="mb-3 mb-md-0 d-flex align-items-center gap-2">
         <img src="/libtera/assets/logoFooter.png" alt="Logo" width="40">
         <span class="fw-bold">LibTera</span>
       </div>
 
-      <!-- Tengah: Navigasi -->
       <div class="mb-3 mb-md-0">
         <ul class="nav justify-content-center">
           <li class="nav-item"><a class="nav-link px-2 text-light" href="/libtera/index.php"><i class="fa-solid fa-circle-question"></i> FAQ</a></li>
         </ul>
       </div>
 
-      <!-- Kanan: Kontak -->
       <div class="text-end small">
         <div><i class="fas fa-envelope me-1"></i> libtera@perpus.ac.id</div>
         <div><i class="fas fa-phone me-1"></i> +62 812-3456-7890</div>
@@ -24,7 +20,6 @@
 
     </div>
 
-    <!-- Copyright -->
     <div class="text-center mt-3 small text-secondary border-top pt-2">
       &copy; <?= date('Y') ?> LibTera. All rights reserved.
     </div>

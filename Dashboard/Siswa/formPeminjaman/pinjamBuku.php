@@ -1,6 +1,5 @@
 <?php 
 session_start();
-
 if(!isset($_SESSION["signIn"]) ) {
   header("Location: ../../sign/member/sign_in.php");
   exit;

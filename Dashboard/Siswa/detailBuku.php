@@ -1,54 +1,95 @@
 <?php
 session_start();
 
-// Validasi login dan role siswa
-if (!isset($_SESSION["login"]) || $_SESSION["role"] !== "siswa") {
-  header("Location: /libtera/login.php");
-  exit;
-}
 
-require "../../connect.php";
-include_once __DIR__ . '/../../layout/header.php';
 
-$id_buku = $_GET['id'];
+require "../../connect.php"; // Pastikan file ini menggunakan MySQLi Object-Oriented ($connect = new mysqli(...))
+
+// --- PERBAIKAN DIMULAI DI SINI ---
+
+// 1. Inisialisasi variabel untuk menghindari error jika buku tidak ditemukan
+$buku = null;
+$title = "Buku Tidak Ditemukan"; 
+$id_buku = $_GET['id'] ?? null; // Gunakan null coalescing operator untuk keamanan
 $id_siswa = $_SESSION['siswa']['id_siswa'];
 
-// Ambil data buku
-$result = mysqli_query($connect, "SELECT * FROM buku WHERE id_buku = '$id_buku'");
-$buku = mysqli_fetch_assoc($result);
+if ($id_buku) {
+    // 2. Ambil data buku menggunakan PREPARED STATEMENT
+    // Ini memperbaiki keamanan (mencegah SQL Injection)
+    $stmt = $connect->prepare("SELECT * FROM buku WHERE id_buku = ?");
+    $stmt->bind_param("s", $id_buku); // 's' karena ID dari GET selalu string
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-// Cek apakah siswa sudah memberi rating
-$cek = mysqli_query($connect, "SELECT * FROM rating WHERE id_siswa = $id_siswa AND id_buku = '$id_buku'");
-$existingRating = mysqli_fetch_assoc($cek);
-
-// Proses insert / update rating
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nilai_rating'])) {
-  $rating = (int) $_POST['nilai_rating'];
-  if ($rating >= 1 && $rating <= 5) {
-    if ($existingRating) {
-      // Ubah rating lama
-      $query = "UPDATE rating SET nilai_rating = $rating WHERE id_siswa = $id_siswa AND id_buku = '$id_buku'";
-    } else {
-      // Kasih rating baru
-      $query = "INSERT INTO rating (id_siswa, id_buku, nilai_rating) VALUES ($id_siswa, '$id_buku', $rating)";
+    if ($result->num_rows > 0) {
+        $buku = $result->fetch_assoc();
+        // 3. Set judul SETELAH mendapatkan data buku
+        // Ganti 'judul' dengan nama kolom judul buku Anda jika berbeda
+        $title = "Detail Buku: " . htmlspecialchars($buku['judul']);
     }
-
-    if (!mysqli_query($connect, $query)) {
-      die("Query Gagal: " . mysqli_error($connect));
-    }
-
-    header("Location: detailBuku.php?id=$id_buku");
-    exit;
-  }
+    $stmt->close();
 }
 
-// Ambil rata-rata rating
-$avgRatingQuery = mysqli_query($connect, "SELECT ROUND(AVG(nilai_rating),1) as avg_rating FROM rating WHERE id_buku = '$id_buku'");
-$avg = mysqli_fetch_assoc($avgRatingQuery)['avg_rating'] ?? 0;
+// Jika buku tidak ditemukan setelah query, hentikan eksekusi.
+if (!$buku) {
+    // Sertakan header sebelum menampilkan pesan error
+    include_once __DIR__ . '/../../layout/header.php';
+    echo "<div class='container alert alert-danger'>Buku dengan ID tersebut tidak ditemukan.</div>";
+    // Sertakan footer jika ada
+    // include_once __DIR__ . '/../../layout/footer.php';
+    exit; // Hentikan script
+}
 
-// Cek apakah siswa sedang meminjam buku ini (status PINJAM)
-$cekPinjam = mysqli_query($connect, "SELECT * FROM peminjaman WHERE id_siswa = $id_siswa AND id_buku = '$id_buku' AND status = 'PINJAM'");
-$sudahDipinjam = mysqli_num_rows($cekPinjam) > 0;
+
+// Cek apakah siswa sudah memberi rating (Prepared Statement)
+$stmt_cek = $connect->prepare("SELECT * FROM rating WHERE id_siswa = ? AND id_buku = ?");
+$stmt_cek->bind_param("is", $id_siswa, $id_buku);
+$stmt_cek->execute();
+$existingRating = $stmt_cek->get_result()->fetch_assoc();
+$stmt_cek->close();
+
+// Proses insert / update rating (Prepared Statement)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nilai_rating'])) {
+    $rating = (int) $_POST['nilai_rating'];
+    if ($rating >= 1 && $rating <= 5) {
+        if ($existingRating) {
+            // Ubah rating lama
+            $query = "UPDATE rating SET nilai_rating = ? WHERE id_siswa = ? AND id_buku = ?";
+            $stmt_update = $connect->prepare($query);
+            $stmt_update->bind_param("iis", $rating, $id_siswa, $id_buku);
+        } else {
+            // Kasih rating baru
+            $query = "INSERT INTO rating (id_siswa, id_buku, nilai_rating) VALUES (?, ?, ?)";
+            $stmt_update = $connect->prepare($query);
+            $stmt_update->bind_param("isi", $id_siswa, $id_buku, $rating);
+        }
+
+        if (!$stmt_update->execute()) {
+            die("Query Gagal: " . $stmt_update->error);
+        }
+        $stmt_update->close();
+
+        header("Location: detailBuku.php?id=$id_buku");
+        exit;
+    }
+}
+
+// Ambil rata-rata rating (Prepared Statement)
+$stmt_avg = $connect->prepare("SELECT ROUND(AVG(nilai_rating), 1) as avg_rating FROM rating WHERE id_buku = ?");
+$stmt_avg->bind_param("s", $id_buku);
+$stmt_avg->execute();
+$avg = $stmt_avg->get_result()->fetch_assoc()['avg_rating'] ?? 0;
+$stmt_avg->close();
+
+// Cek apakah siswa sedang meminjam buku ini (Prepared Statement)
+$stmt_pinjam = $connect->prepare("SELECT * FROM peminjaman WHERE id_siswa = ? AND id_buku = ? AND status = 'PINJAM'");
+$stmt_pinjam->bind_param("is", $id_siswa, $id_buku);
+$stmt_pinjam->execute();
+$sudahDipinjam = $stmt_pinjam->get_result()->num_rows > 0;
+$stmt_pinjam->close();
+
+// Sekarang panggil header, di mana file header.php akan menggunakan variabel $title
+include_once __DIR__ . '/../../layout/header.php';
 ?>
 
 <div class="container mt-5 pt-5">

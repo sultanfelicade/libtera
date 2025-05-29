@@ -325,3 +325,130 @@ font-family: sans-serif;
     border-radius: 50px; /* Membuat tombol lebih bulat (pil) */
     padding: 0.375rem 1rem;
 }
+/* Variabel Warna Tema Cerah dengan Biru Gelap */
+:root {
+    --navbar-primary-color: #2c3e50; /* Biru Gelap */
+    --navbar-accent-color: #0099ff;  /* Biru Lebih Terang (untuk hover/aksen) */
+    --navbar-text-color: #555;       /* Warna teks default */
+    --navbar-text-active-color: #000000; /* Warna teks saat item aktif (di atas glider) */
+    --navbar-icon-color: #7f8c8d;    /* Warna ikon default */
+    --navbar-background-color: #ffffff;
+    --glider-shadow-color: rgba(44, 62, 80, 0.3);
+}
+
+.custom-vertical-navbar {
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+    position: relative; /* Kunci untuk positioning glider */
+    background-color: var(--navbar-background-color);
+}
+
+.custom-vertical-navbar .nav-item {
+    position: relative; /* Untuk stacking context jika diperlukan */
+    margin: 0 10px; /* Memberi sedikit ruang di sisi kiri-kanan item */
+}
+
+.custom-vertical-navbar .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: var(--navbar-text-color);
+    font-weight: 500;
+    border-radius: 6px; /* Sedikit lengkungan pada link */
+    transition: color 0.3s ease, background-color 0.3s ease;
+    position: relative;
+    z-index: 1; /* Agar link di atas glider-container */
+}
+
+.custom-vertical-navbar .nav-link .nav-icon {
+    color: var(--navbar-icon-color);
+    transition: color 0.3s ease;
+    width: 20px; /* Pastikan ikon punya lebar tetap */
+    text-align: center;
+}
+
+.custom-vertical-navbar .nav-link .nav-text {
+    transition: color 0.3s ease;
+}
+
+/* Hover state untuk item yang tidak aktif */
+.custom-vertical-navbar .nav-item:not(.active) .nav-link:hover {
+    background-color: rgba(52, 152, 219, 0.1); /* Latar hover sangat tipis */
+    color: var(--navbar-accent-color);
+}
+
+.custom-vertical-navbar .nav-item:not(.active) .nav-link:hover .nav-icon,
+.custom-vertical-navbar .nav-item:not(.active) .nav-link:hover .nav-text {
+    color: var(--navbar-accent-color);
+}
+
+/* Styling untuk Link Aktif */
+.custom-vertical-navbar .nav-item.active .nav-link {
+    color: var(--navbar-text-active-color); /* Teks jadi putih di atas glider */
+    font-weight: 600;
+}
+
+.custom-vertical-navbar .nav-item.active .nav-link .nav-icon,
+.custom-vertical-navbar .nav-item.active .nav-link .nav-text {
+    color: var(--navbar-text-active-color);
+}
+
+/* Glider Indicator */
+.glider-indicator-container {
+    position: absolute;
+    top: 0;
+    left: 10px; /* Sesuaikan dengan margin .nav-item */
+    right: 10px; /* Sesuaikan dengan margin .nav-item */
+    height: 100%;
+    z-index: 0; /* Di belakang .nav-link */
+    pointer-events: none; /* Agar tidak mengganggu klik pada link */
+}
+
+.glider-indicator {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 0; /* Akan diatur oleh JavaScript */
+    background-color: var(--navbar-primary-color);
+    border-radius: 6px; /* Cocokkan dengan border-radius .nav-link */
+    box-shadow: 0 2px 8px var(--glider-shadow-color);
+    transition: transform 0.4s cubic-bezier(0.65, 0.05, 0.36, 1),
+                height 0.3s cubic-bezier(0.65, 0.05, 0.36, 1),
+                opacity 0.3s ease;
+    opacity: 0; /* Awalnya sembunyi, tampilkan via JS */
+}
+
+/* Styling untuk User Profile Widget */
+.user-profile-widget {
+    /* padding: 15px; */ /* Sudah diatur via px-3 */
+}
+
+.user-profile-widget .user-avatar {
+    border: 3px solid var(--navbar-background-color); /* Efek border "terangkat" */
+    box-shadow: 0 0 0 2px var(--navbar-primary-color), 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.user-profile-widget .profile-name {
+    color: var(--navbar-primary-color);
+    font-size: 1rem;
+    margin-top: 0.25rem;
+}
+
+.user-profile-widget .profile-role {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.user-profile-widget .sign-out-btn {
+    font-size: 0.9rem;
+    margin-top: 10px;
+    background-color: #dc3545; /* Warna default Bootstrap danger */
+    border-color: #dc3545;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.user-profile-widget .sign-out-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 6.0.0-dev+20241213.325760150e
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: May 29, 2025 at 08:26 AM
+-- Generation Time: May 29, 2025 at 01:51 PM
 -- Server version: 8.0.30
--- PHP Version: 8.1.10
+-- PHP Version: 8.4.1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -71,7 +71,7 @@ CREATE TABLE `buku` (
   `deskripsi` text,
   `stok` int DEFAULT '1',
   `id_kategori` int DEFAULT NULL
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `buku`
@@ -92,28 +92,29 @@ INSERT INTO `buku` (`id_buku`, `cover`, `judul`, `pengarang`, `penerbit`, `tahun
 -- --------------------------------------------------------
 
 --
--- Table structure for table `ebook`
+-- Table structure for table `ebooks`
 --
 
-CREATE TABLE `ebook` (
-  `id_ebook` varchar(20) NOT NULL,
-  `file_path` varchar(255) NOT NULL,
+CREATE TABLE `ebooks` (
+  `id_ebook` int NOT NULL,
   `judul` varchar(255) NOT NULL,
-  `pengarang` varchar(255) NOT NULL,
-  `penerbit` varchar(255) NOT NULL,
-  `tahun_terbit` date NOT NULL,
-  `jumlah_halaman` int NOT NULL,
+  `penulis` varchar(255) DEFAULT NULL,
   `deskripsi` text,
-  `tanggal_upload` datetime DEFAULT CURRENT_TIMESTAMP
+  `file_path` varchar(255) NOT NULL,
+  `id_kategori` int DEFAULT NULL,
+  `cover_ebook` varchar(255) DEFAULT NULL,
+  `tanggal_upload` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
--- Dumping data for table `ebook`
+-- Dumping data for table `ebooks`
 --
 
-INSERT INTO `ebook` (`id_ebook`, `file_path`, `judul`, `pengarang`, `penerbit`, `tahun_terbit`, `jumlah_halaman`, `deskripsi`, `tanggal_upload`) VALUES
-('E001', 'files/buku_a.pdf', 'Buku A Ebook', 'Pengarang A', 'Penerbit A', '2021-01-01', 100, 'Deskripsi A Ebook', '2025-05-20 22:56:06'),
-('E002', 'files/buku_b.pdf', 'Buku B Ebook', 'Pengarang B', 'Penerbit B', '2022-02-02', 200, 'Deskripsi B Ebook', '2025-05-20 22:56:06');
+INSERT INTO `ebooks` (`id_ebook`, `judul`, `penulis`, `deskripsi`, `file_path`, `id_kategori`, `cover_ebook`, `tanggal_upload`) VALUES
+(1, 'Mahir Python untuk Pemula', 'Budi Santoso', 'Buku panduan lengkap belajar Python dari dasar hingga mahir, cocok untuk pemula yang ingin terjun ke dunia pemrograman.', 'mahir_python_pemula.pdf', 1, 'cover_python_pemula.jpg', '2025-05-29 13:49:53'),
+(2, 'Panduan Desain Grafis Modern', 'Citra Ayu', 'Pelajari prinsip-prinsip desain grafis modern, penggunaan warna, tipografi, dan layout untuk menghasilkan karya visual yang menarik.', 'panduan_desain_grafis.pdf', 2, 'cover_desain_grafis.png', '2025-05-29 13:49:53'),
+(3, 'Kumpulan Cerpen Anak Langit', 'Endang Lestari', 'Kumpulan cerita pendek yang inspiratif dan penuh makna, mengajak pembaca merenungi kehidupan.', 'cerpen_anak_langit.pdf', 3, NULL, '2025-05-29 13:49:53'),
+(4, 'Teknik SEO 2025', 'Rangga Aditya', 'Strategi Search Engine Optimization terbaru untuk meningkatkan peringkat website Anda di mesin pencari Google.', 'teknik_seo_2025.pdf', 1, 'cover_seo_2025.jpg', '2025-05-29 13:49:53');
 
 -- --------------------------------------------------------
 
@@ -223,14 +224,16 @@ CREATE TABLE `rating` (
   `id_siswa` int NOT NULL,
   `id_buku` varchar(20) NOT NULL,
   `nilai_rating` int NOT NULL
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `rating`
 --
 
 INSERT INTO `rating` (`id_rating`, `id_siswa`, `id_buku`, `nilai_rating`) VALUES
-(1, 1, '5', 3);
+(1, 1, '5', 3),
+(2, 1, '3', 4),
+(3, 1, '1', 5);
 
 -- --------------------------------------------------------
 
@@ -278,10 +281,11 @@ ALTER TABLE `buku`
   ADD KEY `fk_kategori` (`id_kategori`);
 
 --
--- Indexes for table `ebook`
+-- Indexes for table `ebooks`
 --
-ALTER TABLE `ebook`
-  ADD PRIMARY KEY (`id_ebook`);
+ALTER TABLE `ebooks`
+  ADD PRIMARY KEY (`id_ebook`),
+  ADD KEY `id_kategori` (`id_kategori`);
 
 --
 -- Indexes for table `jurusan`
@@ -342,6 +346,12 @@ ALTER TABLE `admin`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `ebooks`
+--
+ALTER TABLE `ebooks`
+  MODIFY `id_ebook` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `jurusan`
 --
 ALTER TABLE `jurusan`
@@ -369,7 +379,7 @@ ALTER TABLE `peminjaman`
 -- AUTO_INCREMENT for table `rating`
 --
 ALTER TABLE `rating`
-  MODIFY `id_rating` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id_rating` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `siswa`
@@ -386,6 +396,12 @@ ALTER TABLE `siswa`
 --
 ALTER TABLE `buku`
   ADD CONSTRAINT `fk_kategori` FOREIGN KEY (`id_kategori`) REFERENCES `kategori` (`id_kategori`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `ebooks`
+--
+ALTER TABLE `ebooks`
+  ADD CONSTRAINT `ebooks_ibfk_1` FOREIGN KEY (`id_kategori`) REFERENCES `kategori` (`id_kategori`);
 
 --
 -- Constraints for table `peminjaman`

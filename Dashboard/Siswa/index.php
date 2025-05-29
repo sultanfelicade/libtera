@@ -101,7 +101,7 @@ $bukuQuery = $stmt->get_result();
                                     <i class="fa-solid fa-star"></i>
                                     <span><?= number_format($buku['rata_rating'], 1) ?>/5</span>
                                 </div>
-                                <a href="detailBuku.php?id=<?= $buku['id_buku'] ?>" class="btn btn-light btn-sm w-100">Lihat Detail</a>
+                                <a href="detailBuku.php?id=<?= $buku['id_buku'] ?>" class="btn btn-primary btn-sm h-13 w-50">Lihat Detail</a>
                             </div>
                         </div>
                     </div>

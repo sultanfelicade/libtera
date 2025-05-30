@@ -51,7 +51,7 @@ include_once __DIR__ . '/../../../layout/header.php';
                     source="<?php echo htmlspecialchars($pdfUrlForDFLIP); ?>"
                     height="100%" <?php /* Mengambil 100% dari tinggi parent (flipbook-viewer-wrapper) */ ?>
                     webgl="true"
-                    backgroundcolor="#f0f0f0" <?php /* Warna latar flipbook, bisa beda dari page */ ?>
+                    backgroundcolor="#C0C0C0" <?php /* Warna latar flipbook, bisa beda dari page */ ?>
                 ></div>
             </div>
         </div>

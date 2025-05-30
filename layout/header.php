@@ -12,8 +12,13 @@ $role = $_SESSION["role"];
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title><?= $title ?? 'Libtera' ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <!-- DearFlip Flipbook CSS & JS (versi gratis dari CDN) -->
-   <link href="/libtera/uploads/ebook/assets/css/dflip.min.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="/libtera/uploads/ebook/assets/css/dflip.min.css" type="text/css">
+  <link rel="stylesheet" href="/libtera/uploads/ebook/assets/css/themefiles/dark-theme.css" type="text/css">
+  <script src="/libtera/uploads/ebook/assets/js/dflip.min.js" type="text/javascript"></script>
+  <link href="/libtera/uploads/ebook/assets/css/dflip.min.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="/libtera/uploads/ebook/assets/css/themify-icons.min.css" type="text/css">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="/libtera/layout/style.css">

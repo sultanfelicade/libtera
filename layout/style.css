@@ -505,3 +505,132 @@ body { padding-top: 56px; }
 .text-yellow-400 {
   color: #facc15; /* atau warna kuning lain yang Anda inginkan */
 }
+
+/* EBOOK */
+/* === KARTU HOVER REVEAL (Adaptasi dari Uiverse.io by suleymanlaarabidev) === */
+
+.uiverse-reveal-card { /* Menggantikan .card dari Uiverse */
+    width: 100%; /* Mengisi lebar kolom Bootstrap */
+    aspect-ratio: 3 / 4.2; /* Sesuaikan rasio ini agar cocok dengan konten Anda,
+                              atau gunakan tinggi tetap jika lebih disukai, misal: height: 280px; */
+    /* height: 254px; */ /* Ukuran asli dari Uiverse, bisa Anda gunakan jika fixed size lebih cocok */
+    background: rgb(103, 225, 255); /* Warna awal kartu */
+    transition: all 0.4s ease-in-out; /* Transisi yang lebih smooth */
+    border-radius: 10px;
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3); /* Shadow yang sedikit berbeda */
+    
+    position: relative; /* PENTING untuk positioning anak dan overflow */
+    overflow: hidden;  /* PENTING agar konten (gambar/teks) tidak keluar dari kartu */
+    /* Hapus font-size global dari kartu, atur pada elemen teks spesifik */
+}
+
+.uiverse-reveal-card:hover {
+    border-radius: 15px;
+    cursor: pointer;
+    transform: scale(1.05); /* Sedikit perkecil scale agar tidak terlalu dominan */
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.4);
+    background: rgb(103, 151, 255); /* Warna saat hover */
+}
+
+.uiverse-reveal-card .first-content {
+    height: 100%;
+    width: 100%;
+    transition: opacity 0.4s ease-in-out, visibility 0s linear 0.4s; /* Transisi opacity & visibility */
+    display: flex; /* Untuk memastikan gambar di dalamnya bisa diatur */
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    visibility: visible; /* Terlihat awalnya */
+    /* border-radius: 10px; -> Tidak perlu jika parent sudah overflow:hidden dan punya radius */
+    background-color: #f0f0f0; /* Warna fallback jika gambar tidak ada */
+}
+
+.uiverse-reveal-card-image { /* Untuk elemen <img> di dalam first-content */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;   /* 'cover' akan mengisi dan memotong. 'contain' akan menampilkan seluruh gambar. */
+    display: block;      /* Menghilangkan spasi ekstra di bawah gambar jika ada */
+}
+
+.uiverse-reveal-card .second-content {
+    height: 100%; /* Akan mengisi penuh saat aktif */
+    width: 100%;
+    opacity: 0;
+    visibility: hidden; /* Sembunyikan awalnya */
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+    border-radius: 15px; /* Radius saat hover, sama dengan card:hover */
+    transition: opacity 0.4s ease-in-out, visibility 0s linear 0s; /* Transisi saat muncul */
+    
+    /* Efek transform dari Uiverse */
+    /* Awalnya dirotasi dan dikecilkan agar tidak terlihat sebelum hover */
+    /* transform: rotate(90deg) scale(0.5); */ /* Bisa coba tanpa rotate jika aneh */
+    transform-origin: center center;
+
+    position: absolute; /* Agar bisa mengisi kartu saat aktif dan menimpa first-content */
+    top: 0;
+    left: 0;
+    background: rgb(103, 151, 255); /* Warna background saat aktif (sama dengan card:hover) */
+    padding: 15px;
+    box-sizing: border-box; /* Agar padding tidak menambah ukuran total width/height */
+    color: white; /* Warna teks default untuk konten kedua */
+}
+
+/* Efek saat kartu di-hover */
+.uiverse-reveal-card:hover .first-content {
+    opacity: 0;
+    visibility: hidden; /* Sembunyikan sepenuhnya */
+    transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
+}
+
+.uiverse-reveal-card:hover .second-content {
+    opacity: 1;
+    visibility: visible; /* Tampilkan */
+    transition: opacity 0.4s ease-in-out 0.1s, visibility 0s linear 0s; /* Sedikit delay agar smooth */
+    /* transform: rotate(0deg) scale(1); */ /* Kembali ke state normal */
+}
+
+/* Styling untuk detail teks di dalam second-content */
+/* .uiverse-reveal-card-details {
+    Tidak perlu styling khusus jika .second-content sudah flex dan center
+} */
+
+.uiverse-reveal-title {
+    font-size: 1rem; /* Sesuaikan */
+    font-weight: bold;
+    color: white;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    /* Untuk text-truncate jika judul panjang (opsional) */
+    /* display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: calc(1rem * 1.3 * 2); */
+}
+
+.uiverse-reveal-author {
+    font-size: 0.8rem; /* Sesuaikan */
+    color: #e0e0e0;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+}
+
+.uiverse-reveal-card .second-content .btn {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    /* Sesuaikan warna tombol jika .btn-light tidak kontras dengan background second-content */
+    /* background-color: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.3);
+    color: white; */
+}
+/* .uiverse-reveal-card .second-content .btn:hover {
+    background-color: rgba(255,255,255,0.3);
+} */
+

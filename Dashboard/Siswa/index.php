@@ -91,7 +91,7 @@ $bukuQuery = $stmt->get_result();
                     <div class="flip-card">
                         <div class="flip-card-inner">
                             <div class="flip-card-front">
-                                <img src="/libtera/assets/<?= htmlspecialchars($buku['cover']) ?>" alt="Cover: <?= htmlspecialchars($buku['judul']) ?>">
+                                <img src="/libtera/uploads/books/<?= htmlspecialchars($buku['cover']) ?>" alt="Cover: <?= htmlspecialchars($buku['judul']) ?>">
                             </div>
                             
                             <div class="flip-card-back">

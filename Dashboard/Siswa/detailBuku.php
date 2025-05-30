@@ -95,7 +95,7 @@ include_once __DIR__ . '/../../layout/header.php';
 <div class="container mt-5 pt-5">
   <div class="row">
     <div class="col-md-4 text-center">
-      <img src="/libtera/uploads/cover/<?= htmlspecialchars($buku['cover']) ?>" class="img-fluid rounded" alt="cover buku">
+      <img src="/libtera/uploads/books/<?= htmlspecialchars($buku['cover']) ?>" class="img-fluid rounded" alt="cover buku">
     </div>
     <div class="col-md-8">
       <h2 class="fw-bold"><?= htmlspecialchars($buku['judul']) ?></h2>

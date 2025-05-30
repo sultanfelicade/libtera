@@ -2,36 +2,105 @@
 session_start();
 
 if (!isset($_SESSION["login"]) || $_SESSION["role"] !== "siswa") {
-  header("Location: /libtera/login.php");
-  exit;
+    $_SESSION['pesan_error_login'] = "Anda harus login sebagai siswa untuk melakukan aksi ini.";
+    header("Location: /libtera/login.php");
+    exit;
 }
 
 require "../../../connect.php";
 
 $id_buku = $_GET['id'] ?? null;
-$id_siswa = $_SESSION['siswa']['id_siswa'];
-$id_admin = 1; // sementara hardcode dulu
+$id_siswa = $_SESSION['siswa']['id_siswa'] ?? null;
+$id_admin = 1;
 $tgl_pinjam = date('Y-m-d');
-$status = 'PINJAM';
+$status_pinjam = 'PINJAM';
+
+if (!$id_siswa) {
+    $_SESSION['peminjaman_error_message'] = "Sesi pengguna tidak valid. Silakan login kembali.";
+    header("Location: /libtera/login.php");
+    exit;
+}
 
 if (!$id_buku) {
-  die("ID buku tidak ditemukan.");
+    $_SESSION['peminjaman_error_message'] = "ID buku tidak valid atau tidak ditemukan.";
+    header("Location: /libtera/Dashboard/siswa/katalog.php"); // Asumsi path katalog
+    exit;
 }
 
-// Cek apakah sudah meminjam buku yang sama dan belum dikembalikan
-$cek = mysqli_query($connect, "SELECT * FROM peminjaman WHERE id_siswa = $id_siswa AND id_buku = '$id_buku' AND status = 'PINJAM'");
-if (mysqli_num_rows($cek) > 0) {
-  echo "<script>alert('Kamu sudah meminjam buku ini dan belum mengembalikannya.'); window.location.href = '../detailBuku.php?id=$id_buku';</script>";
-  exit;
+// Ambil judul buku untuk pesan notifikasi
+$judulBukuDisplay = "buku ini";
+$stmt_judul_buku = $connect->prepare("SELECT judul FROM buku WHERE id_buku = ?");
+if ($stmt_judul_buku) {
+    $stmt_judul_buku->bind_param("s", $id_buku);
+    $stmt_judul_buku->execute();
+    $result_judul_buku = $stmt_judul_buku->get_result();
+    if($row_judul = $result_judul_buku->fetch_assoc()){
+        $judulBukuDisplay = "'" . htmlspecialchars($row_judul['judul']) . "'";
+    }
+    $stmt_judul_buku->close();
 }
 
-// Insert peminjaman
-$query = "INSERT INTO peminjaman (id_siswa, id_buku, id_admin, tgl_pinjam, status)
-          VALUES ($id_siswa, '$id_buku', $id_admin, '$tgl_pinjam', '$status')";
+// --- PENGECEKAN BATAS MAKSIMAL PEMINJAMAN ---
+$stmt_hitung_pinjaman = $connect->prepare("SELECT COUNT(*) as jumlah_dipinjam FROM peminjaman WHERE id_siswa = ? AND status = 'PINJAM'");
+if (!$stmt_hitung_pinjaman) {
+    error_log("Prepare statement gagal (hitung pinjaman): " . $connect->error);
+    $_SESSION['peminjaman_error_message'] = "Terjadi kesalahan pada sistem (hitung).";
+    header("Location: ../detailBuku.php?id=$id_buku");
+    exit;
+}
+$stmt_hitung_pinjaman->bind_param("i", $id_siswa);
+$stmt_hitung_pinjaman->execute();
+$hasil_hitung = $stmt_hitung_pinjaman->get_result()->fetch_assoc();
+$jumlahBukuSedangDipinjam = $hasil_hitung ? (int)$hasil_hitung['jumlah_dipinjam'] : 0;
+$stmt_hitung_pinjaman->close();
 
-if (mysqli_query($connect, $query)) {
-  echo "<script>alert('Peminjaman berhasil!'); window.location.href = '../detailBuku.php?id=$id_buku';</script>";
+$batasMaksimalPeminjaman = 3; // Tentukan batas maksimal
+
+if ($jumlahBukuSedangDipinjam >= $batasMaksimalPeminjaman) {
+    $_SESSION['peminjaman_info_message'] = "Anda telah mencapai batas maksimal peminjaman ($batasMaksimalPeminjaman buku). Kembalikan buku terlebih dahulu untuk meminjam lagi.";
+    header("Location: ../detailBuku.php?id=$id_buku");
+    exit;
+}
+// --- AKHIR PENGECEKAN BATAS MAKSIMAL PEMINJAMAN ---
+
+// Cek apakah siswa sudah meminjam buku yang sama dan statusnya masih 'PINJAM'
+$stmt_cek = $connect->prepare("SELECT id_peminjaman FROM peminjaman WHERE id_siswa = ? AND id_buku = ? AND status = 'PINJAM'");
+if (!$stmt_cek) {
+    error_log("Prepare statement gagal (cek peminjaman): " . $connect->error);
+    $_SESSION['peminjaman_error_message'] = "Terjadi kesalahan pada sistem (cek).";
+    header("Location: ../detailBuku.php?id=$id_buku");
+    exit;
+}
+$stmt_cek->bind_param("is", $id_siswa, $id_buku);
+$stmt_cek->execute();
+$result_cek = $stmt_cek->get_result();
+
+if ($result_cek->num_rows > 0) {
+    $_SESSION['peminjaman_error_message'] = "Kamu sudah meminjam $judulBukuDisplay dan belum mengembalikannya.";
+    $stmt_cek->close();
+    header("Location: ../detailBuku.php?id=$id_buku");
+    exit;
+}
+$stmt_cek->close();
+
+// Jika lolos semua pengecekan, proses insert peminjaman baru
+$stmt_insert = $connect->prepare("INSERT INTO peminjaman (id_siswa, id_buku, id_admin, tgl_pinjam, status) VALUES (?, ?, ?, ?, ?)");
+if (!$stmt_insert) {
+    error_log("Prepare statement gagal (insert peminjaman): " . $connect->error);
+    $_SESSION['peminjaman_error_message'] = "Terjadi kesalahan pada sistem (insert).";
+    header("Location: ../detailBuku.php?id=$id_buku");
+    exit;
+}
+$stmt_insert->bind_param("isiss", $id_siswa, $id_buku, $id_admin, $tgl_pinjam, $status_pinjam);
+
+if ($stmt_insert->execute()) {
+    $_SESSION['peminjaman_sukses_message'] = "Peminjaman $judulBukuDisplay berhasil!";
 } else {
-  echo "Gagal meminjam buku: " . mysqli_error($connect);
+    $_SESSION['peminjaman_error_message'] = "Gagal meminjam $judulBukuDisplay. Kesalahan: " . htmlspecialchars($stmt_insert->error);
+    error_log("Gagal insert peminjaman untuk siswa $id_siswa, buku $id_buku: " . $stmt_insert->error);
 }
+$stmt_insert->close();
+
+header("Location: ../detailBuku.php?id=$id_buku");
+exit;
 ?>

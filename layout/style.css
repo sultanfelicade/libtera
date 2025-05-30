@@ -227,12 +227,16 @@ body { padding-top: 56px; }
   .navbar-mobile { display: none; }
 }
 .flip-card {
-background-color: transparent;
-width: 100%;
-height: 320px; /* Beri tinggi tetap agar semua kartu sama besar */
-perspective: 1000px; /* Efek 3D */
-font-family: sans-serif;
+    background-color: transparent;
+    width: 100%; /* Atau lebar spesifik jika bagian dari grid, misal: 250px */
+    /* Hapus height tetap, ganti dengan aspect-ratio */
+    /* height: 320px; */
+    aspect-ratio: 2 / 3; /* Contoh rasio aspek untuk sampul buku (lebar/tinggi). Sesuaikan! */
+    perspective: 1000px; /* Efek 3D */
+    font-family: sans-serif;
+    margin-bottom: 20px; /* Tambahkan margin jika kartu berderet agar tidak menempel */
 }
+
 .flip-card-inner {
     position: relative;
     width: 100%;
@@ -241,52 +245,67 @@ font-family: sans-serif;
     transition: transform 0.8s;
     transform-style: preserve-3d;
 }
+
 /* Efek flip saat kursor diarahkan */
 .flip-card:hover .flip-card-inner {
     transform: rotateY(180deg);
 }
+
 /* Pengaturan untuk sisi depan dan belakang */
 .flip-card-front, .flip-card-back {
     box-shadow: 0 8px 14px 0 rgba(0,0,0,0.2);
     position: absolute;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    /* justify-content: center; Disesuaikan jika ada konten lain selain gambar */
+    /* align-items: center; Disesuaikan jika ada konten lain selain gambar */
     width: 100%;
     height: 100%;
     -webkit-backface-visibility: hidden; /* Untuk browser Safari */
     backface-visibility: hidden;
     border-radius: 1rem;
-    
+    overflow: hidden; /* Penting agar gambar tidak keluar dari border-radius */
 }
+
 /* Gaya untuk Sisi DEPAN Kartu */
 .flip-card-front {
-    background-color:rgba(147, 151, 148, 0.39); /* Warna putih agar cover terlihat jelas */
-    justify-content: space-between; /* Mendorong teks ke bawah */
-    border: 1px solid #dee2e6; /* Tambahkan border untuk efek */
-    background-position: cover;
+    /* background-color:rgba(147, 151, 148, 0.39); Jika gambar menutupi penuh, ini mungkin tidak perlu */
+    border: 1px solid #dee2e6;
+    /* background-position: cover; Tidak relevan jika menggunakan elemen <img> */
+    /* Pastikan tidak ada padding yang mengganggu ukuran gambar jika gambar harus menutupi penuh */
+    padding: 0; /* Hapus padding jika ingin gambar menempel ke tepi */
+    justify-content: stretch; /* Membuat item di dalamnya merentang */
+    align-items: stretch; /* Membuat item di dalamnya merentang */
 }
+
 .flip-card-front img {
-    width: 100%;
-    max-height: 100%; /* Atur tinggi gambar agar ada ruang untuk teks */
-    object-fit: contain; /* Agar gambar tidak gepeng/terdistorsi */
+    width: 100%; /* Gambar mengisi lebar .flip-card-front */
+    height: 100%; /* Gambar mengisi tinggi .flip-card-front */
+    object-fit: cover; /* Penting! Gambar akan menutupi area, mempertahankan rasio aspek, dan memotong jika perlu */
+    display: block; /* Menghilangkan spasi ekstra di bawah gambar jika ada */
 }
+
 /* Gaya untuk Sisi BELAKANG Kartu */
 .flip-card-back {
     background: #343a40; /* Warna gelap agar kontras */
     color: white;
     transform: rotateY(180deg);
+    justify-content: center; /* Pusatkan konten di belakang */
+    align-items: center; /* Pusatkan konten di belakang */
+    padding: 1rem; /* Beri padding agar konten tidak menempel tepi */
 }
+
 .flip-card-back .book-title {
     font-size: 1.1em;
     font-weight: bold;
 }
+
 .flip-card-back .book-author {
     font-size: 0.9em;
     font-style: italic;
     color: #ced4da; /* Warna abu-abu terang */
 }
+
 .flip-card-back .book-rating {
     color: #FFD43B; /* Warna kuning untuk bintang */
     margin: 1rem 0;
@@ -421,9 +440,6 @@ font-family: sans-serif;
 }
 
 /* Styling untuk User Profile Widget */
-.user-profile-widget {
-    /* padding: 15px; */ /* Sudah diatur via px-3 */
-}
 
 .user-profile-widget .user-avatar {
     border: 3px solid var(--navbar-background-color); /* Efek border "terangkat" */
@@ -451,4 +467,41 @@ font-family: sans-serif;
 .user-profile-widget .sign-out-btn:hover {
     background-color: #c82333;
     border-color: #bd2130;
+}
+/* Gaya dasar untuk tombol bintang */
+.star-btn {
+  background: none; /* Hapus latar belakang default tombol */
+  border: none;     /* Hapus border default tombol */
+  padding: 0;       /* Hapus padding default tombol */
+  cursor: pointer;
+  font-size: 30px;  /* Sesuaikan dengan kelas 'text-3xl' Tailwind jika perlu, atau biarkan Tailwind yang mengatur */
+  line-height: 1;   /* Untuk alignment vertikal karakter bintang */
+  /* Warna default akan diatur oleh kelas text-gray-400 dari PHP/Tailwind */
+  /* Transisi sudah diatur oleh kelas 'transition-colors duration-300' Tailwind */
+}
+
+/* Kelas untuk efek hover yang akan ditambahkan oleh JavaScript */
+/* Warna ini akan menimpa text-gray-400 tetapi tidak text-yellow-400 (rating aktif) kecuali kita pakai !important */
+.star-btn.star-hover {
+  color: #f59e0b; /* Warna kuning/oranye untuk hover (misalnya, Tailwind 'yellow-500' atau 'orange-500') */
+}
+
+/* Untuk memastikan rating yang aktif (text-yellow-400 dari PHP) tetap lebih menonjol
+   bahkan saat ada hover pada bintang dengan nilai lebih rendah,
+   Anda bisa membuat selector .text-yellow-400 lebih spesifik atau menggunakan !important jika perlu.
+   Namun, logika JavaScript di bawah akan menghapus .star-hover dari bintang yang sudah
+   aktif jika hover ada pada bintang dengan nilai lebih rendah, jadi seharusnya tidak masalah.
+*/
+
+/* Jika Anda tidak menggunakan Tailwind CSS untuk warna dasar:
+.star-btn {
+  color: #9ca3af; // Warna abu-abu default
+}
+.star-btn.text-yellow-400 { // Kelas ini ditambahkan oleh PHP
+  color: #facc15; // Warna kuning untuk rating aktif
+}
+*/
+/* Contoh jika text-yellow-400 adalah kelas kustom */
+.text-yellow-400 {
+  color: #facc15; /* atau warna kuning lain yang Anda inginkan */
 }

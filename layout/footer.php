@@ -1,5 +1,4 @@
-</main> 
-<footer class="bg-light text-dark mt-auto shadow-sm">
+</main> <footer class="bg-light text-dark mt-auto shadow-sm">
   <div class="container-fluid px-4 py-3">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
       
@@ -10,7 +9,8 @@
 
       <div class="mb-3 mb-md-0">
         <ul class="nav justify-content-center">
-          <li class="nav-item"><a class="nav-link px-2 text-dark" href="/libtera/index.php"><i class="fa-solid fa-circle-question"></i> FAQ</a></li> </ul>
+          <li class="nav-item"><a class="nav-link px-2 text-dark" href="/libtera/index.php"><i class="fa-solid fa-circle-question"></i> FAQ</a></li>
+        </ul>
       </div>
 
       <div class="text-end small">
@@ -28,59 +28,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const navbar = document.querySelector('.custom-vertical-navbar');
-    if (!navbar) {
-        // console.warn('Custom vertical navbar not found.');
-        return;
-    }
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    const glider = navbar.querySelector('.glider-indicator');
-    const navItems = navbar.querySelectorAll('.nav-item'); // Semua item menu
-    let activeItem = navbar.querySelector('.nav-item.active'); // Item yang aktif
+<script src="/libtera/layout/notifikasi.js"></script>
 
-    if (!glider) {
-        // console.warn('Glider indicator not found.');
-        return;
-    }
-
-    function positionGlider(targetItem) {
-        if (!targetItem) {
-            glider.style.opacity = '0'; // Sembunyikan glider jika tidak ada target
-            return;
-        }
-
-        const itemHeight = targetItem.offsetHeight;
-        const itemTopRelativeToNavbar = targetItem.offsetTop;
-
-        glider.style.height = `${itemHeight}px`;
-        glider.style.transform = `translateY(${itemTopRelativeToNavbar}px)`;
-        glider.style.opacity = '1';
-    }
-
-    if (activeItem) {
-        setTimeout(() => {
-            positionGlider(activeItem);
-        }, 50); // Sedikit delay untuk memastikan rendering selesai
-    } else {
-        glider.style.opacity = '0'; // Sembunyikan jika tidak ada yang aktif
-    }
-
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function() {
-            // Penting: Jika navigasi SPA, pastikan 'activeItem' adalah referensi terbaru
-            // Untuk navigasi tradisional (full reload), PHP akan set kelas 'active'
-            // jadi kita bisa query ulang di sini untuk memastikan.
-            activeItem = navbar.querySelector('.nav-item.active');
-            if (activeItem) {
-                positionGlider(activeItem);
-            }
-        }, 100);
-    });
-});
-</script>
 </body>
 </html>

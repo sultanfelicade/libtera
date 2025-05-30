@@ -104,7 +104,7 @@ $resultEbooks = $stmtEbooks->get_result();
                             <p class="card-text small text-muted mb-1">Penulis: <?= htmlspecialchars($ebook['penulis'] ?? 'N/A') ?></p>
                             <p class="card-text small text-muted mb-2">Kategori: <?= htmlspecialchars($ebook['nama_kategori'] ?? 'N/A') ?></p>
                             <?php /* <p class="card-text small flex-grow-1 text-truncate" title="<?= htmlspecialchars($ebook['deskripsi'] ?? '') ?>"><?= htmlspecialchars(substr($ebook['deskripsi'] ?? '', 0, 70)) . (strlen($ebook['deskripsi'] ?? '') > 70 ? '...' : '') ?></p> */ ?>
-                            <a href="flipbook.php?file=<?= urlencode($ebook['file_path']) ?>" class="btn btn-primary btn-sm mt-auto w-100" target="_blank">
+                            <a href="flipbook.php?file=<?= urlencode($ebook['file_path']) ?>" class="btn btn-primary btn-sm mt-auto w-100">
                                 <i class="fas fa-book-open me-1"></i> Baca Sekarang
                             </a>
                         </div>
@@ -114,8 +114,7 @@ $resultEbooks = $stmtEbooks->get_result();
         <?php else: ?>
             <div class="col-12">
                 <div class="text-center py-5">
-                    <?php // include_once __DIR__ . '/../../../layout/_not_found_animation.php'; // Jika ada animasi ?>
-                    <i class="fas fa-ghost fa-3x text-muted mb-3"></i>
+                    <?php include '../_not_found_animation.php'; ?>
                     <h4 class="fw-bold" style="color: #555;">Oops! E-Book Tidak Ditemukan</h4>
                     <p class="text-muted">Belum ada e-book yang sesuai dengan pencarian atau filter Anda.</p>
                 </div>

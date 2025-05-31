@@ -40,11 +40,11 @@ if (!function_exists('isNavLinkActive')) {
     <?php elseif ($role === 'admin'): ?>
         <?php
         $menuAdmin = [
-            ["href" => "/libtera/admin/kelola_buku.php", "icon" => "fa-solid fa-book", "text" => "Kelola Buku"],
-            ["href" => "/libtera/admin/kelola_ebook.php", "icon" => "fa-solid fa-book-open", "text" => "Kelola Ebook"],
-            ["href" => "/libtera/admin/peminjaman.php", "icon" => "fas fa-handshake", "text" => "Peminjaman"],
-            ["href" => "/libtera/admin/denda.php", "icon" => "fa-solid fa-money-bill-1-wave", "text" => "Kelola Denda"],
-            ["href" => "/libtera/admin/kelola_user.php", "icon" => "fa-solid fa-users", "text" => "Kelola User"]
+            ["href" => "/libtera/Dashboard/Admin/index.php", "icon" => "fa-solid fa-book", "text" => "Kelola Buku"],
+            ["href" => "/libtera/Dashboard/Admin/ebooks/kelola_ebook.php", "icon" => "fa-solid fa-book-open", "text" => "Kelola Ebook"],
+            ["href" => "/libtera/Dashboard/Admin/formPeminjaman/peminjaman.php", "icon" => "fas fa-handshake", "text" => "Peminjaman"],
+            ["href" => "/libtera/Dashboard/Admin/formPeminjaman/kelola_denda.php", "icon" => "fa-solid fa-money-bill-1-wave", "text" => "Kelola Denda"],
+            ["href" => "/libtera/Dashboard/Admin/kelola_user.php", "icon" => "fa-solid fa-users", "text" => "Kelola User"]
         ];
         foreach ($menuAdmin as $item): ?>
             <li class="nav-item <?php echo isNavLinkActive($item['href']) ? 'active' : ''; ?>">

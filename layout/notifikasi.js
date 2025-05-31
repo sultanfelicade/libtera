@@ -77,3 +77,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 });
+
+// File: notifikasi.js
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // 1. Logika untuk konfirmasi pembatalan peminjaman
+    const tombolBatalPeminjamanList = document.querySelectorAll('.btn-batalkan-peminjaman');
+    tombolBatalPeminjamanList.forEach(tombol => {
+        tombol.addEventListener('click', function (event) {
+            event.preventDefault(); // Mencegah navigasi langsung dari link
+
+            const judulBuku = this.dataset.judulBuku;
+            const urlBatal = this.href; // URL aksi dari atribut href
+
+            if (typeof Swal !== 'undefined') { // Cek apakah SweetAlert2 sudah terdefinisi
+                Swal.fire({
+                    title: 'Anda Yakin?',
+                    text: `Anda akan membatalkan pengajuan untuk buku "${judulBuku}". Aksi ini tidak dapat dikembalikan!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, batalkan!',
+                    cancelButtonText: 'Tidak jadi'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Jika dikonfirmasi, lanjutkan ke URL pembatalan
+                        window.location.href = urlBatal;
+                    }
+                });
+            } else {
+                // Fallback jika SweetAlert2 tidak terload, gunakan confirm bawaan
+                if (confirm(`Anda akan membatalkan pengajuan untuk buku "${judulBuku}". Lanjutkan?`)) {
+                    window.location.href = urlBatal;
+                }
+            }
+        });
+    });
+
+    // 2. Logika untuk menampilkan notifikasi hasil aksi dari server
+    //    yang parameternya sudah disiapkan di window.swalInitParams oleh PHP (di footer.php)
+    if (typeof Swal !== 'undefined' && window.swalInitParams) {
+        Swal.fire(window.swalInitParams);
+        window.swalInitParams = null; // Bersihkan variabel global setelah digunakan agar tidak muncul lagi pada navigasi berikutnya
+    } else if (window.swalInitParams && window.swalInitParams.text) {
+        // Fallback sederhana jika Swal tidak ada tapi parameter ada (misalnya untuk debug)
+        alert(window.swalInitParams.title + "\n" + window.swalInitParams.text);
+        window.swalInitParams = null;
+    }
+
+    // ... (Kode JavaScript lain yang mungkin sudah ada di notifikasi.js) ...
+
+});

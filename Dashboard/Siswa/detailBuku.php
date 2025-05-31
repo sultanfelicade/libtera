@@ -13,23 +13,21 @@ if (isset($_SESSION['pesan_error'])) unset($_SESSION['pesan_error']);
 // Ambil dan Hapus pesan untuk PEMINJAMAN (INI UNTUK ALERT JAVASCRIPT di footer.php)
 $js_peminjaman_sukses_message = $_SESSION['peminjaman_sukses_message'] ?? null;
 $js_peminjaman_error_message = $_SESSION['peminjaman_error_message'] ?? null;
-$js_peminjaman_info_message = $_SESSION['peminjaman_info_message'] ?? null; // BARU
+$js_peminjaman_info_message = $_SESSION['peminjaman_info_message'] ?? null;
 
 if (isset($_SESSION['peminjaman_sukses_message'])) unset($_SESSION['peminjaman_sukses_message']);
 if (isset($_SESSION['peminjaman_error_message'])) unset($_SESSION['peminjaman_error_message']);
-if (isset($_SESSION['peminjaman_info_message'])) unset($_SESSION['peminjaman_info_message']); // BARU
+if (isset($_SESSION['peminjaman_info_message'])) unset($_SESSION['peminjaman_info_message']);
 
 
 $buku = null;
 $title = "Buku Tidak Ditemukan";
 $id_buku = $_GET['id'] ?? null;
-$id_siswa = $_SESSION['siswa']['id_siswa'] ?? null; // Pastikan id_siswa ada di session dan benar
+$id_siswa = $_SESSION['siswa']['id_siswa'] ?? null;
 
 if (!$id_siswa) {
-    // Handle jika siswa tidak login, misalnya redirect ke halaman login
-    // Set pesan error ke session (akan dibaca di halaman login jika ada mekanisme di sana)
     $_SESSION['pesan_error_login'] = "Anda harus login untuk melihat detail buku dan memberi rating.";
-    header("Location: /libtera/login.php"); // Sesuaikan path login Anda
+    header("Location: /libtera/login.php");
     exit;
 }
 
@@ -47,34 +45,31 @@ if ($id_buku) {
 
 
 if (!$buku) {
-    // Jika buku tidak ditemukan, sertakan header sebelum menampilkan pesan error
-    // Asumsi header.php bisa dipanggil di sini dan $title akan digunakan di dalamnya
     include_once __DIR__ . '/../../layout/header.php';
-    // Tampilkan pesan error umum dari session jika ada (misalnya dari redirect login)
     if (isset($_SESSION['pesan_error_umum'])) {
         echo "<div class='container mt-3 pt-5'><div class='alert alert-danger'>".htmlspecialchars($_SESSION['pesan_error_umum'])."</div></div>";
         unset($_SESSION['pesan_error_umum']);
     }
     echo "<div class='container mt-3 pt-5 alert alert-danger'>Buku dengan ID tersebut tidak ditemukan.</div>";
-    include_once __DIR__ . '/../../layout/footer.php'; // Sertakan footer juga
-    exit; // Hentikan script
+    include_once __DIR__ . '/../../layout/footer.php';
+    exit;
 }
 
 // Cek apakah siswa sudah memberi rating
-$stmt_cek = $connect->prepare("SELECT * FROM rating WHERE id_siswa = ? AND id_buku = ?");
-$stmt_cek->bind_param("is", $id_siswa, $id_buku);
-$stmt_cek->execute();
-$existingRating = $stmt_cek->get_result()->fetch_assoc();
-$stmt_cek->close();
+$stmt_cek_rating = $connect->prepare("SELECT * FROM rating WHERE id_siswa = ? AND id_buku = ?");
+$stmt_cek_rating->bind_param("is", $id_siswa, $id_buku);
+$stmt_cek_rating->execute();
+$existingRating = $stmt_cek_rating->get_result()->fetch_assoc();
+$stmt_cek_rating->close();
 
-// Cek apakah siswa sedang meminjam buku ini
-$stmt_pinjam = $connect->prepare("SELECT * FROM peminjaman WHERE id_siswa = ? AND id_buku = ? AND status = 'PINJAM'");
-$stmt_pinjam->bind_param("is", $id_siswa, $id_buku);
-$stmt_pinjam->execute();
-$sudahDipinjam = $stmt_pinjam->get_result()->num_rows > 0;
-$stmt_pinjam->close();
+// Cek apakah siswa sedang meminjam buku ini (status = 'PINJAM') - INI UNTUK LOGIKA RATING
+$stmt_pinjam_untuk_rating = $connect->prepare("SELECT id_peminjaman FROM peminjaman WHERE id_siswa = ? AND id_buku = ? AND status = 'PINJAM'");
+$stmt_pinjam_untuk_rating->bind_param("is", $id_siswa, $id_buku);
+$stmt_pinjam_untuk_rating->execute();
+$sedangDipinjamUntukRating = $stmt_pinjam_untuk_rating->get_result()->num_rows > 0;
+$stmt_pinjam_untuk_rating->close();
 
-// Cek apakah siswa pernah meminjam dan MENGEMBALIKAN buku ini
+// Cek apakah siswa pernah meminjam dan MENGEMBALIKAN buku ini - UNTUK LOGIKA RATING
 $stmt_pernah_kembali = $connect->prepare("SELECT COUNT(*) as jumlah_kembali FROM peminjaman WHERE id_siswa = ? AND id_buku = ? AND status = 'KEMBALI'");
 $stmt_pernah_kembali->bind_param("is", $id_siswa, $id_buku);
 $stmt_pernah_kembali->execute();
@@ -83,10 +78,28 @@ $jumlahPernahKembali = $hasil_pernah_kembali ? (int)$hasil_pernah_kembali['jumla
 $stmt_pernah_kembali->close();
 
 // Tentukan apakah siswa boleh memberi rating
-// Logika: Boleh jika sedang pinjam ATAU sudah pernah mengembalikan
-$bolehMemberiRating = ($sudahDipinjam || $jumlahPernahKembali > 0);
-// Jika aturan lebih ketat (misalnya, HANYA setelah mengembalikan):
-// $bolehMemberiRating = ($jumlahPernahKembali > 0);
+$bolehMemberiRating = ($sedangDipinjamUntukRating || $jumlahPernahKembali > 0);
+
+// --- BARU: Cek status peminjaman buku ini (PINJAM atau PENDING) untuk kondisi tombol ---
+$statusPeminjamanUntukTombol = null; 
+$stmt_cek_status_tombol = $connect->prepare(
+    "SELECT status FROM peminjaman 
+     WHERE id_siswa = ? AND id_buku = ? AND (status = 'PINJAM' OR status = 'PENDING') 
+     LIMIT 1"
+);
+if ($stmt_cek_status_tombol) {
+    $stmt_cek_status_tombol->bind_param("is", $id_siswa, $id_buku);
+    $stmt_cek_status_tombol->execute();
+    $result_status_tombol = $stmt_cek_status_tombol->get_result();
+    if ($row_status_tombol = $result_status_tombol->fetch_assoc()) {
+        $statusPeminjamanUntukTombol = $row_status_tombol['status'];
+    }
+    $stmt_cek_status_tombol->close();
+} else {
+    // Handle error jika prepare statement gagal, misalnya log error
+    error_log("Gagal prepare statement untuk cek status tombol: " . $connect->error);
+}
+// --- AKHIR BLOK BARU ---
 
 
 // Proses insert / update rating
@@ -107,23 +120,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nilai_rating'])) {
             if (isset($stmt_update)) {
                 if (!$stmt_update->execute()) {
                     error_log("Query Gagal Update/Insert Rating: " . $stmt_update->error . " untuk siswa $id_siswa, buku $id_buku");
-                    $_SESSION['pesan_error'] = "Terjadi kesalahan internal saat menyimpan rating."; // Pesan untuk notifikasi HTML
+                    $_SESSION['pesan_error'] = "Terjadi kesalahan internal saat menyimpan rating.";
                 } else {
-                    $_SESSION['pesan_sukses'] = "Rating berhasil disimpan!"; // Pesan untuk notifikasi HTML
+                    $_SESSION['pesan_sukses'] = "Rating berhasil disimpan!";
                 }
                 $stmt_update->close();
             } else {
-                 $_SESSION['pesan_error'] = "Gagal menyiapkan statement untuk menyimpan rating."; // Pesan untuk notifikasi HTML
+                $_SESSION['pesan_error'] = "Gagal menyiapkan statement untuk menyimpan rating.";
             }
             header("Location: detailBuku.php?id=$id_buku");
             exit;
         } else {
-            $_SESSION['pesan_error'] = "Nilai rating yang diberikan tidak valid."; // Pesan untuk notifikasi HTML
+            $_SESSION['pesan_error'] = "Nilai rating yang diberikan tidak valid.";
             header("Location: detailBuku.php?id=$id_buku");
             exit;
         }
     } else {
-        $_SESSION['pesan_error'] = "Anda belum memenuhi syarat untuk memberikan rating pada buku ini."; // Pesan untuk notifikasi HTML
+        $_SESSION['pesan_error'] = "Anda belum memenuhi syarat untuk memberikan rating pada buku ini.";
         header("Location: detailBuku.php?id=$id_buku");
         exit;
     }
@@ -134,13 +147,11 @@ $stmt_avg = $connect->prepare("SELECT ROUND(AVG(nilai_rating), 1) as avg_rating 
 $stmt_avg->bind_param("s", $id_buku);
 $stmt_avg->execute();
 $avg_result = $stmt_avg->get_result()->fetch_assoc();
-$avg = $avg_result && $avg_result['avg_rating'] !== null ? $avg_result['avg_rating'] : "Belum ada rating"; // Tampilkan teks jika null
+$avg = $avg_result && $avg_result['avg_rating'] !== null ? $avg_result['avg_rating'] : "Belum ada rating";
 $stmt_avg->close();
 
-// Sekarang panggil header, di mana file header.php akan menggunakan variabel $title
 include_once __DIR__ . '/../../layout/header.php';
 
-// Tampilkan pesan notifikasi HTML untuk rating (jika ada)
 if ($rating_pesan_error_html) {
     echo "<div class='container mt-3 pt-5'><div class='alert alert-danger'>".htmlspecialchars($rating_pesan_error_html)."</div></div>";
 }
@@ -164,12 +175,14 @@ if ($rating_pesan_sukses_html) {
       <p class="text-secondary" style="text-align: justify;"><?= nl2br(htmlspecialchars($buku['deskripsi'])) ?></p>
 
       <div class="mt-4">
-          <?php if ($sudahDipinjam): ?>
+          <?php if ($statusPeminjamanUntukTombol === 'PINJAM'): ?>
             <button class="btn btn-secondary" disabled><i class="fas fa-book-reader me-2"></i>Sedang Dipinjam</button>
-          <?php else: ?>
+          <?php elseif ($statusPeminjamanUntukTombol === 'PENDING'): ?>
+            <button class="btn btn-info" disabled><i class="fas fa-clock me-2"></i>Menunggu Persetujuan</button>
+          <?php else: // null, berarti tidak ada PENDING atau PINJAM untuk buku ini oleh siswa ini ?>
             <a href="/libtera/Dashboard/siswa/formPeminjaman/prosesPeminjaman.php?id=<?= $buku['id_buku'] ?>" class="btn btn-primary"><i class="fas fa-hand-holding-heart me-2"></i>Pinjam Sekarang</a>
           <?php endif; ?>
-      </div>
+          </div>
 
 
       <div class="mt-4 border-top pt-3">
@@ -201,23 +214,21 @@ if ($rating_pesan_sukses_html) {
               <p class="text-success fw-semibold mt-2 small">
                 <i class="fas fa-check-circle me-1"></i>Kamu sudah memberi rating: <?= htmlspecialchars($existingRating['nilai_rating']) ?> <i class="fa-solid fa-star text-warning"></i>
               </p>
-            <?php else: // Belum rating, tapi boleh memberi rating ?>
+            <?php else: ?>
               <p class="text-muted mt-2 small">Klik bintang untuk memberi rating.</p>
             <?php endif; ?>
 
         <?php else: ?>
             <p class="text-muted mt-2 small">
                 <?php
-                if (!$sudahDipinjam && $jumlahPernahKembali == 0) {
+                // Variabel $sedangDipinjamUntukRating digunakan di sini, bukan $statusPeminjamanUntukTombol
+                if (!$sedangDipinjamUntukRating && $jumlahPernahKembali == 0) {
                     echo "Anda harus meminjam buku ini terlebih dahulu untuk dapat memberikan rating.";
-                } elseif ($sudahDipinjam && !$existingRating) { // Sedang pinjam tapi belum pernah selesai dan belum rating
+                } elseif ($sedangDipinjamUntukRating && !$existingRating) {
                     echo "Anda dapat memberikan rating setelah selesai membaca buku ini atau jika sudah pernah mengembalikannya.";
                 } elseif ($existingRating) {
-                    // Seharusnya kondisi ini tidak tercapai jika $bolehMemberiRating false dan $existingRating true,
-                    // kecuali logikanya diubah. Tapi untuk jaga-jaga:
-                     echo "Anda sudah memberikan rating untuk buku ini.";
-                }
-                 else {
+                    echo "Anda sudah memberikan rating untuk buku ini.";
+                } else {
                     echo "Anda belum memenuhi syarat untuk memberikan rating pada buku ini.";
                 }
                 ?>
@@ -228,12 +239,9 @@ if ($rating_pesan_sukses_html) {
   </div> 
 </div> 
 <script>
-    // Variabel JavaScript global ini akan dibaca oleh skrip di footer.php
-    // Gunakan json_encode() untuk mencetak string PHP ke JavaScript dengan aman,
-    // dan 'null' jika variabel PHP tidak ada isinya.
     var globalPeminjamanSuksesMsg = <?= $js_peminjaman_sukses_message ? json_encode($js_peminjaman_sukses_message) : 'null' ?>;
     var globalPeminjamanErrorMsg = <?= $js_peminjaman_error_message ? json_encode($js_peminjaman_error_message) : 'null' ?>;
-    var globalPeminjamanInfoMsg = <?= $js_peminjaman_info_message ? json_encode($js_peminjaman_info_message) : 'null' ?>; // BARU
+    var globalPeminjamanInfoMsg = <?= $js_peminjaman_info_message ? json_encode($js_peminjaman_info_message) : 'null' ?>;
 </script>
 
 <?php

@@ -54,22 +54,22 @@ $bukuQuery = $stmt->get_result();
 ?>
 
 <div class="container-fluid">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-        <div class="category-scroll-container">
-        <div class="category-list">
-                <a href="?" class="btn btn-<?= !$kategoriId && empty($searchTerm) ? 'primary' : 'outline-primary' ?>">Semua</a>
-                <?php mysqli_data_seek($kategoriQuery, 0); // Reset pointer query kategori ?>
-                <?php while($kategori = mysqli_fetch_assoc($kategoriQuery)): ?>
-                    <a href="?kategori=<?= $kategori['id_kategori'] ?>" class="btn btn-<?= ($kategoriId == $kategori['id_kategori']) ? 'primary' : 'outline-primary' ?>">
-                        <?= htmlspecialchars($kategori['nama_kategori']) ?>
-                    </a>
-                <?php endwhile; ?>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-5">
+        <div class="category-scroll-container w-50">
+            <div class="category-list">
+                    <a href="?" class="btn btn-<?= !$kategoriId && empty($searchTerm) ? 'primary' : 'outline-primary' ?>">Semua</a>
+                    <?php mysqli_data_seek($kategoriQuery, 0); // Reset pointer query kategori ?>
+                    <?php while($kategori = mysqli_fetch_assoc($kategoriQuery)): ?>
+                        <a href="?kategori=<?= $kategori['id_kategori'] ?>" class="btn btn-<?= ($kategoriId == $kategori['id_kategori']) ? 'primary' : 'outline-primary' ?>">
+                            <?= htmlspecialchars($kategori['nama_kategori']) ?>
+                        </a>
+                    <?php endwhile; ?>
             </div>
         </div>
         <div class="input-container">
-          <form method="GET" action="">
-            <input class="input" type="search" name="search" placeholder="Judul atau pengarang..." value="<?= htmlspecialchars($searchTerm) ?>">
-          </form>
+            <form method="GET" action="">
+                <input class="input" type="search" name="search" placeholder="Judul atau pengarang..." value="<?= htmlspecialchars($searchTerm) ?>">
+            </form>
         </div>
     </div>
 
@@ -101,7 +101,7 @@ $bukuQuery = $stmt->get_result();
                                     <i class="fa-solid fa-star"></i>
                                     <span><?= number_format($buku['rata_rating'], 1) ?>/5</span>
                                 </div>
-                                <a href="detailBuku.php?id=<?= $buku['id_buku'] ?>" class="btn btn-primary btn-sm h-13 w-50">Lihat Detail</a>
+                                <a href="detailBuku.php?id=<?= $buku['id_buku'] ?>" class="btn btn-primary btn-sm h-15">Lihat Detail</a>
                             </div>
                         </div>
                     </div>

@@ -11,9 +11,9 @@ require "../../../connect.php";
 
 $id_buku = $_GET['id'] ?? null;
 $id_siswa = $_SESSION['siswa']['id_siswa'] ?? null;
-$id_admin = 1;
-$tgl_pinjam = date('Y-m-d');
-$status_pinjam = 'PINJAM';
+$id_admin = 1; // Anda mungkin ingin meninjau kembali logika id_admin ini, apakah selalu 1 atau dinamis
+// $tgl_pinjam = date('Y-m-d'); // Dihapus sesuai permintaan
+$status_pinjam = 'PENDING'; // Diubah sesuai permintaan
 
 if (!$id_siswa) {
     $_SESSION['peminjaman_error_message'] = "Sesi pengguna tidak valid. Silakan login kembali.";
@@ -40,31 +40,32 @@ if ($stmt_judul_buku) {
     $stmt_judul_buku->close();
 }
 
-// --- PENGECEKAN BATAS MAKSIMAL PEMINJAMAN ---
-$stmt_hitung_pinjaman = $connect->prepare("SELECT COUNT(*) as jumlah_dipinjam FROM peminjaman WHERE id_siswa = ? AND status = 'PINJAM'");
-if (!$stmt_hitung_pinjaman) {
-    error_log("Prepare statement gagal (hitung pinjaman): " . $connect->error);
+// --- PENGECEKAN BATAS MAKSIMAL PENGAJUAN PEMINJAMAN (STATUS PENDING atau PINJAM) ---
+// Kita perlu mengecek total buku yang sedang 'PENDING' atau 'PINJAM' oleh siswa
+$stmt_hitung_pengajuan = $connect->prepare("SELECT COUNT(*) as jumlah_diajukan FROM peminjaman WHERE id_siswa = ? AND (status = 'PENDING' OR status = 'PINJAM')");
+if (!$stmt_hitung_pengajuan) {
+    error_log("Prepare statement gagal (hitung pengajuan): " . $connect->error);
     $_SESSION['peminjaman_error_message'] = "Terjadi kesalahan pada sistem (hitung).";
     header("Location: ../detailBuku.php?id=$id_buku");
     exit;
 }
-$stmt_hitung_pinjaman->bind_param("i", $id_siswa);
-$stmt_hitung_pinjaman->execute();
-$hasil_hitung = $stmt_hitung_pinjaman->get_result()->fetch_assoc();
-$jumlahBukuSedangDipinjam = $hasil_hitung ? (int)$hasil_hitung['jumlah_dipinjam'] : 0;
-$stmt_hitung_pinjaman->close();
+$stmt_hitung_pengajuan->bind_param("i", $id_siswa);
+$stmt_hitung_pengajuan->execute();
+$hasil_hitung = $stmt_hitung_pengajuan->get_result()->fetch_assoc();
+$jumlahBukuSedangDiajukanAtauDipinjam = $hasil_hitung ? (int)$hasil_hitung['jumlah_diajukan'] : 0;
+$stmt_hitung_pengajuan->close();
 
 $batasMaksimalPeminjaman = 3; // Tentukan batas maksimal
 
-if ($jumlahBukuSedangDipinjam >= $batasMaksimalPeminjaman) {
-    $_SESSION['peminjaman_info_message'] = "Anda telah mencapai batas maksimal peminjaman ($batasMaksimalPeminjaman buku). Kembalikan buku terlebih dahulu untuk meminjam lagi.";
+if ($jumlahBukuSedangDiajukanAtauDipinjam >= $batasMaksimalPeminjaman) {
+    $_SESSION['peminjaman_info_message'] = "Anda telah mencapai batas maksimal pengajuan atau peminjaman buku ($batasMaksimalPeminjaman buku). Selesaikan atau batalkan pengajuan/peminjaman sebelumnya.";
     header("Location: ../detailBuku.php?id=$id_buku");
     exit;
 }
-// --- AKHIR PENGECEKAN BATAS MAKSIMAL PEMINJAMAN ---
+// --- AKHIR PENGECEKAN BATAS MAKSIMAL PENGAJUAN PEMINJAMAN ---
 
-// Cek apakah siswa sudah meminjam buku yang sama dan statusnya masih 'PINJAM'
-$stmt_cek = $connect->prepare("SELECT id_peminjaman FROM peminjaman WHERE id_siswa = ? AND id_buku = ? AND status = 'PINJAM'");
+// Cek apakah siswa sudah mengajukan peminjaman buku yang sama dan statusnya masih 'PENDING' atau 'PINJAM'
+$stmt_cek = $connect->prepare("SELECT id_peminjaman FROM peminjaman WHERE id_siswa = ? AND id_buku = ? AND (status = 'PENDING' OR status = 'PINJAM')");
 if (!$stmt_cek) {
     error_log("Prepare statement gagal (cek peminjaman): " . $connect->error);
     $_SESSION['peminjaman_error_message'] = "Terjadi kesalahan pada sistem (cek).";
@@ -76,27 +77,29 @@ $stmt_cek->execute();
 $result_cek = $stmt_cek->get_result();
 
 if ($result_cek->num_rows > 0) {
-    $_SESSION['peminjaman_error_message'] = "Kamu sudah meminjam $judulBukuDisplay dan belum mengembalikannya.";
+    $_SESSION['peminjaman_error_message'] = "Kamu sudah mengajukan peminjaman atau sedang meminjam $judulBukuDisplay.";
     $stmt_cek->close();
     header("Location: ../detailBuku.php?id=$id_buku");
     exit;
 }
 $stmt_cek->close();
 
-// Jika lolos semua pengecekan, proses insert peminjaman baru
-$stmt_insert = $connect->prepare("INSERT INTO peminjaman (id_siswa, id_buku, id_admin, tgl_pinjam, status) VALUES (?, ?, ?, ?, ?)");
+// Jika lolos semua pengecekan, proses insert pengajuan peminjaman baru
+// Kolom tgl_pinjam dihilangkan dari INSERT karena statusnya PENDING
+$stmt_insert = $connect->prepare("INSERT INTO peminjaman (id_siswa, id_buku, id_admin, status) VALUES (?, ?, ?, ?)");
 if (!$stmt_insert) {
     error_log("Prepare statement gagal (insert peminjaman): " . $connect->error);
     $_SESSION['peminjaman_error_message'] = "Terjadi kesalahan pada sistem (insert).";
     header("Location: ../detailBuku.php?id=$id_buku");
     exit;
 }
-$stmt_insert->bind_param("isiss", $id_siswa, $id_buku, $id_admin, $tgl_pinjam, $status_pinjam);
+// bind_param disesuaikan karena tgl_pinjam dihilangkan, begitu juga dengan jumlah 's' nya
+$stmt_insert->bind_param("isis", $id_siswa, $id_buku, $id_admin, $status_pinjam);
 
 if ($stmt_insert->execute()) {
-    $_SESSION['peminjaman_sukses_message'] = "Peminjaman $judulBukuDisplay berhasil!";
+    $_SESSION['peminjaman_sukses_message'] = "Pengajuan peminjaman $judulBukuDisplay berhasil! Mohon tunggu persetujuan admin.";
 } else {
-    $_SESSION['peminjaman_error_message'] = "Gagal meminjam $judulBukuDisplay. Kesalahan: " . htmlspecialchars($stmt_insert->error);
+    $_SESSION['peminjaman_error_message'] = "Gagal mengajukan peminjaman $judulBukuDisplay. Kesalahan: " . htmlspecialchars($stmt_insert->error);
     error_log("Gagal insert peminjaman untuk siswa $id_siswa, buku $id_buku: " . $stmt_insert->error);
 }
 $stmt_insert->close();

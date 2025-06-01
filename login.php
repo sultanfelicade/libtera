@@ -44,6 +44,11 @@
 
       <button type="submit" name="signIn" class="btn btn-primary w-100">Sign In</button>
     </form>
+
+    <!-- Tambahan: link daftar -->
+    <div class="text-center mt-3">
+      <p class="">Belum punya akun? <a href="signup.php">Daftar sekarang</a></p>
+    </div>
   </div>
 </div>
 

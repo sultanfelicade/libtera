@@ -11,7 +11,7 @@ require "../../../connect.php";
 
 $id_buku = $_GET['id'] ?? null;
 $id_siswa = $_SESSION['siswa']['id_siswa'] ?? null;
-$id_admin = 1; // Anda mungkin ingin meninjau kembali logika id_admin ini, apakah selalu 1 atau dinamis
+// $id_admin = 1; // Dihapus karena tidak digunakan lagi di sini
 // $tgl_pinjam = date('Y-m-d'); // Dihapus sesuai permintaan
 $status_pinjam = 'PENDING'; // Diubah sesuai permintaan
 
@@ -41,7 +41,6 @@ if ($stmt_judul_buku) {
 }
 
 // --- PENGECEKAN BATAS MAKSIMAL PENGAJUAN PEMINJAMAN (STATUS PENDING atau PINJAM) ---
-// Kita perlu mengecek total buku yang sedang 'PENDING' atau 'PINJAM' oleh siswa
 $stmt_hitung_pengajuan = $connect->prepare("SELECT COUNT(*) as jumlah_diajukan FROM peminjaman WHERE id_siswa = ? AND (status = 'PENDING' OR status = 'PINJAM')");
 if (!$stmt_hitung_pengajuan) {
     error_log("Prepare statement gagal (hitung pengajuan): " . $connect->error);
@@ -85,16 +84,18 @@ if ($result_cek->num_rows > 0) {
 $stmt_cek->close();
 
 // Jika lolos semua pengecekan, proses insert pengajuan peminjaman baru
-// Kolom tgl_pinjam dihilangkan dari INSERT karena statusnya PENDING
-$stmt_insert = $connect->prepare("INSERT INTO peminjaman (id_siswa, id_buku, id_admin, status) VALUES (?, ?, ?, ?)");
+// Kolom id_admin dan tgl_pinjam dihilangkan dari INSERT karena statusnya PENDING dan id_admin tidak diisi saat pengajuan
+$stmt_insert = $connect->prepare("INSERT INTO peminjaman (id_siswa, id_buku, status) VALUES (?, ?, ?)");
 if (!$stmt_insert) {
     error_log("Prepare statement gagal (insert peminjaman): " . $connect->error);
     $_SESSION['peminjaman_error_message'] = "Terjadi kesalahan pada sistem (insert).";
     header("Location: ../detailBuku.php?id=$id_buku");
     exit;
 }
-// bind_param disesuaikan karena tgl_pinjam dihilangkan, begitu juga dengan jumlah 's' nya
-$stmt_insert->bind_param("isis", $id_siswa, $id_buku, $id_admin, $status_pinjam);
+// bind_param disesuaikan karena id_admin dan tgl_pinjam dihilangkan
+// Tipe data untuk id_buku mungkin perlu disesuaikan (misalnya 'i' jika integer)
+// Di sini saya mengikuti penggunaan 's' seperti pada $stmt_judul_buku dan $stmt_cek
+$stmt_insert->bind_param("iss", $id_siswa, $id_buku, $status_pinjam);
 
 if ($stmt_insert->execute()) {
     $_SESSION['peminjaman_sukses_message'] = "Pengajuan peminjaman $judulBukuDisplay berhasil! Mohon tunggu persetujuan admin.";

@@ -83,6 +83,7 @@ include_once __DIR__ . '/../../../layout/header.php'; // Panggil header setelah 
     .tulisan p{
         width: 500px;
     }
+
 </style>
 
 <h1 class="h1 mb-2">Daftar E-Book</h1>
@@ -150,17 +151,31 @@ include_once __DIR__ . '/../../../layout/header.php'; // Panggil header setelah 
             <?php endwhile; ?>
         <?php else: ?>
              <div class="tulisan" >
-                <?php
-                        $notFoundPath = __DIR__ . '/../_not_found_animation.php';
-                        if (file_exists($notFoundPath)) {
-                            include $notFoundPath;
-                        } else {
-                            echo "<p class='text-muted'>(Animasi buku tidak ditemukan)</p>";
-                        }
-                ?>                
-                <h1 class="fw-bold mt-4" style="color: #555;">Oops! Buku Tidak Ditemukan</h1>
-                <p class="text-muted">Coba gunakan kata kunci atau filter kategori yang berbeda.</p>
+            <?php
+                $notFoundPath = __DIR__ . '/../_not_found_animation.php';
+                if (file_exists($notFoundPath)) {
+                    include $notFoundPath;
+                } else {
+                    echo "<p class='text-muted'>(Animasi buku tidak ditemukan)</p>";
+                }
+            ?>                
+            <h1 class="fw-bold mt-4" style="color: #555;">Oops! Buku Tidak Ditemukan</h1>
+            <p class="text-muted">Coba gunakan kata kunci atau filter kategori yang berbeda.</p>
             </div>
+        <style>
+            @media (max-width: 600px) {
+            .tulisan {
+                margin: 24px 0 !important;
+                padding: 0 10px;
+            }
+            .tulisan h1,
+            .tulisan p {
+                width: 100% !important;
+                max-width: 100vw;
+                font-size: 20px;
+            }
+            }
+        </style>
         <?php endif; ?>
     </div>
 </div>

@@ -1,24 +1,20 @@
 <?php
-ob_start(); // Mulai output buffering
+ob_start();
 session_start();
 
-// --- Autentikasi Admin ---
-if (!isset($_SESSION['admin']) || !isset($_SESSION['admin']['id'])) { 
+if (!isset($_SESSION['admin']) || !isset($_SESSION['admin']['id'])) {
     $_SESSION['error_message'] = "Sesi admin tidak ditemukan. Silakan login kembali.";
-    header("Location: /libtera/login_admin.php"); // Sesuaikan path login admin Anda
+    header("Location: /libtera/login_admin.php"); 
     exit;
 }
-$id_admin_logged_in = (int)$_SESSION['admin']['id'];
-// --- End Autentikasi Admin ---
+// $id_admin_logged_in = (int)$_SESSION['admin']['id']; // Tidak digunakan untuk pencatatan lagi
 
 $title = "Kelola Denda & Pengembalian - Libtera Admin";
-require __DIR__ . '/../../../connect.php'; // Koneksi ke database
+require __DIR__ . '/../../../connect.php';
 
-// --- KONFIGURASI ATURAN DENDA & PEMINJAMAN ---
 define('DURASI_PINJAM_HARI_DEFAULT', 7);
 define('DENDA_PER_PERIODE_DEFAULT', 5000);
-define('PERIODE_DENDA_HARI_DEFAULT', 7); // 7 untuk per minggu
-// --- END KONFIGURASI ---
+define('PERIODE_DENDA_HARI_DEFAULT', 7);
 
 $message = '';
 $error_message = '';
@@ -32,10 +28,8 @@ if (isset($_SESSION['error_message'])) {
     unset($_SESSION['error_message']);
 }
 
-// --- BAGIAN PROSES AKSI FORM (POST REQUESTS) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // Proses Catat Denda Baru & Pengembalian Buku
     if (isset($_POST['catat_denda_dan_pengembalian_submit'])) {
         $id_peminjaman_catat = isset($_POST['id_peminjaman_catat_modal']) ? (int)$_POST['id_peminjaman_catat_modal'] : 0;
         $jumlah_denda_dikenakan_catat_str = str_replace('.', '', $_POST['jumlah_denda_dikenakan_catat_modal'] ?? '0');
@@ -60,28 +54,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($peminjaman_updated > 0) {
                     if ($jumlah_denda_dikenakan_catat > 0) {
                         $status_denda_catat = 'Belum Lunas';
-                        // Menggunakan nama kolom dari Denda table SQL yang disepakati untuk manual:
-                        // tgl_transaksi_denda, id_admin_pencatat
-                        // ENUM('Lunas', 'Belum Lunas', 'Dihapuskan')
-                        $tgl_transaksi_denda_val = $tgl_pengembalian_catat; 
+                        $tgl_transaksi_denda_val = $tgl_pengembalian_catat;
 
                         if ($jumlah_dibayar_sekarang_catat >= $jumlah_denda_dikenakan_catat) {
                             $status_denda_catat = 'Lunas';
                             $jumlah_dibayar_sekarang_catat = $jumlah_denda_dikenakan_catat;
                         }
-                        // Tidak ada status 'Dibayar Sebagian' di ENUM tabel Denda sederhana yang terakhir kita buat
-                        // Jika ingin ada, ENUM perlu diubah. Untuk sekarang, jika bayar > 0 tapi < dikenakan, tetap 'Belum Lunas'.
-
-                        // Sesuaikan dengan kolom tabel Denda yang sederhana:
-                        // `id_admin_pencatat`, `tgl_transaksi_denda`
-                        // `jumlah_telah_dibayar`
+                        
                         $stmt_insert_denda = $connect->prepare(
-                            "INSERT INTO Denda (id_peminjaman, jumlah_denda_dikenakan, jumlah_telah_dibayar, tgl_transaksi_denda, status_denda, id_admin_pencatat, keterangan) 
-                             VALUES (?, ?, ?, ?, ?, ?, ?)"
+                            "INSERT INTO Denda (id_peminjaman, jumlah_denda_dikenakan, jumlah_telah_dibayar, tgl_transaksi_denda, status_denda, keterangan) 
+                             VALUES (?, ?, ?, ?, ?, ?)"
                         );
                         if (!$stmt_insert_denda) throw new Exception("Gagal menyiapkan statement insert denda: " . $connect->error);
                         
-                        $stmt_insert_denda->bind_param("iddssis", $id_peminjaman_catat, $jumlah_denda_dikenakan_catat, $jumlah_dibayar_sekarang_catat, $tgl_transaksi_denda_val, $status_denda_catat, $id_admin_logged_in, $keterangan_catat);
+                        $stmt_insert_denda->bind_param("iddsss", $id_peminjaman_catat, $jumlah_denda_dikenakan_catat, $jumlah_dibayar_sekarang_catat, $tgl_transaksi_denda_val, $status_denda_catat, $keterangan_catat);
                         
                         if (!$stmt_insert_denda->execute()) {
                             throw new Exception("Gagal mencatat denda: " . $stmt_insert_denda->error);
@@ -93,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $connect->commit();
                 } else {
-                    throw new Exception("Gagal memproses pengembalian. Peminjaman ID #$id_peminjaman_catat mungkin sudah dikembalikan atau tidak ditemukan dengan status 'PINJAM'.");
+                    throw new Exception("Gagal memproses pengembalian. Peminjaman ID #$id_peminjaman_catat mungkin sudah dikembalikan, hilang, atau tidak ditemukan dengan status 'PINJAM'.");
                 }
             } catch (Exception $e) {
                 $connect->rollback();
@@ -106,7 +92,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Proses Pembayaran Denda Lanjutan (yang sudah tercatat)
+    if (isset($_POST['laporkan_buku_hilang_submit'])) {
+        $id_peminjaman_hilang = isset($_POST['id_peminjaman_hilang_modal']) ? (int)$_POST['id_peminjaman_hilang_modal'] : 0;
+        $id_buku_hilang = isset($_POST['id_buku_hilang_modal']) ? (int)$_POST['id_buku_hilang_modal'] : 0;
+        $jumlah_denda_hilang_str = str_replace('.', '', $_POST['jumlah_denda_buku_hilang_modal'] ?? '0');
+        $jumlah_denda_hilang = (float)str_replace(',', '.', $jumlah_denda_hilang_str);
+        $tgl_lapor_hilang = $_POST['tgl_lapor_hilang_modal'] ?? date('Y-m-d');
+        $keterangan_hilang = trim($_POST['keterangan_hilang_modal'] ?? 'Buku dilaporkan hilang.');
+
+        if ($id_peminjaman_hilang > 0 && $id_buku_hilang > 0 && $jumlah_denda_hilang > 0) {
+            $connect->begin_transaction();
+            try {
+                $stmt_update_peminjaman = $connect->prepare("UPDATE Peminjaman SET status = 'HILANG', tgl_kembali = ? WHERE id_peminjaman = ? AND status = 'PINJAM'");
+                if (!$stmt_update_peminjaman) throw new Exception("Gagal menyiapkan statement update peminjaman (hilang): " . $connect->error);
+                $stmt_update_peminjaman->bind_param("si", $tgl_lapor_hilang, $id_peminjaman_hilang);
+                $stmt_update_peminjaman->execute();
+                $peminjaman_updated = $stmt_update_peminjaman->affected_rows;
+                $stmt_update_peminjaman->close();
+
+                if ($peminjaman_updated > 0) {
+                    $status_denda_hilang = 'Belum Lunas';
+                    $keterangan_final_hilang = "BUKU HILANG. " . $keterangan_hilang;
+
+                    $stmt_insert_denda = $connect->prepare(
+                        "INSERT INTO Denda (id_peminjaman, jumlah_denda_dikenakan, jumlah_telah_dibayar, tgl_transaksi_denda, status_denda, keterangan) 
+                         VALUES (?, ?, 0, ?, ?, ?)"
+                    );
+                    if (!$stmt_insert_denda) throw new Exception("Gagal menyiapkan statement insert denda (hilang): " . $connect->error);
+                    
+                    $stmt_insert_denda->bind_param('idsss', $id_peminjaman_hilang, $jumlah_denda_hilang, $tgl_lapor_hilang, $status_denda_hilang, $keterangan_final_hilang);
+                    
+                    if (!$stmt_insert_denda->execute()) {
+                        throw new Exception("Gagal mencatat denda buku hilang: " . $stmt_insert_denda->error);
+                    }
+                    $id_denda_baru = $stmt_insert_denda->insert_id;
+                    $stmt_insert_denda->close();
+
+                    $stmt_update_stok = $connect->prepare("UPDATE Buku SET stok = GREATEST(0, stok - 1) WHERE id_buku = ?");
+                    if (!$stmt_update_stok) throw new Exception("Gagal menyiapkan statement update stok buku: " . $connect->error);
+                    $stmt_update_stok->bind_param("i", $id_buku_hilang);
+                    if (!$stmt_update_stok->execute()) {
+                         error_log("Gagal mengurangi stok buku ID #$id_buku_hilang setelah dilaporkan hilang untuk peminjaman ID #$id_peminjaman_hilang: " . $stmt_update_stok->error);
+                    }
+                    $stmt_update_stok->close();
+                    
+                    $connect->commit();
+                    $_SESSION['success_message'] = "Buku untuk Peminjaman ID #$id_peminjaman_hilang berhasil dilaporkan hilang. Denda (ID #$id_denda_baru) sebesar Rp " . number_format($jumlah_denda_hilang,0,',','.') . " telah dicatat. Stok buku telah dikurangi.";
+                } else {
+                    throw new Exception("Gagal memproses laporan buku hilang. Peminjaman ID #$id_peminjaman_hilang mungkin sudah diproses atau tidak ditemukan dengan status 'PINJAM'.");
+                }
+            } catch (Exception $e) {
+                $connect->rollback();
+                $_SESSION['error_message'] = "Terjadi kesalahan saat melaporkan buku hilang: " . $e->getMessage();
+            }
+        } else {
+            $_SESSION['error_message'] = "Data untuk laporan buku hilang tidak valid. Pastikan ID peminjaman, ID buku, dan jumlah denda valid.";
+        }
+        header("Location: " . $_SERVER['PHP_SELF'] . "?" . http_build_query($_GET));
+        exit;
+    }
+
     if (isset($_POST['proses_pembayaran_submit'])) {
         $id_denda_bayar = isset($_POST['id_denda_bayar_modal_hidden_lanjutan']) ? (int)$_POST['id_denda_bayar_modal_hidden_lanjutan'] : 0;
         $jumlah_bayar_sekarang_str = str_replace('.', '', $_POST['jumlah_bayar_sekarang_modal_input_lanjutan'] ?? '0');
@@ -117,7 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id_denda_bayar > 0 && $jumlah_bayar_sekarang > 0) {
             $connect->begin_transaction();
             try {
-                // Menggunakan nama kolom dari tabel Denda sederhana: jumlah_telah_dibayar
                 $stmt_curr = $connect->prepare("SELECT jumlah_denda_dikenakan, jumlah_telah_dibayar, keterangan, status_denda FROM Denda WHERE id_denda = ? FOR UPDATE");
                 if (!$stmt_curr) throw new Exception("Gagal menyiapkan statement (ambil data denda): " . $connect->error);
                 $stmt_curr->bind_param("i", $id_denda_bayar);
@@ -128,28 +172,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($denda_curr) {
                     if ($denda_curr['status_denda'] == 'Lunas' || $denda_curr['status_denda'] == 'Dihapuskan') {
-                         throw new Exception("Denda ID #$id_denda_bayar sudah lunas atau dihapuskan.");
+                        throw new Exception("Denda ID #$id_denda_bayar sudah lunas atau dihapuskan.");
                     }
 
                     $total_sudah_dibayar_baru = $denda_curr['jumlah_telah_dibayar'] + $jumlah_bayar_sekarang;
-                    $status_denda_baru = 'Belum Lunas'; // Default, akan diubah jika lunas
+                    $status_denda_baru = 'Belum Lunas'; 
 
                     if ($total_sudah_dibayar_baru >= $denda_curr['jumlah_denda_dikenakan']) {
                         $status_denda_baru = 'Lunas';
                         $total_sudah_dibayar_baru = $denda_curr['jumlah_denda_dikenakan']; 
                     }
-                    // Tidak ada status 'Dibayar Sebagian' di ENUM tabel Denda sederhana yang terakhir,
-                    // jadi jika belum lunas, tetap 'Belum Lunas'.
                     
-                    $keterangan_log = "Pembayaran Lanjutan: Rp " . number_format($jumlah_bayar_sekarang, 0, ',', '.') . " pada " . date('d M Y', strtotime($tgl_pembayaran)) . " oleh Admin ID: " . $id_admin_logged_in . ".";
+                    $keterangan_log = "Pembayaran Lanjutan: Rp " . number_format($jumlah_bayar_sekarang, 0, ',', '.') . " pada " . date('d M Y', strtotime($tgl_pembayaran)) . "."; // Admin ID dihilangkan
                     if(!empty($keterangan_pembayaran)) $keterangan_log .= " Ket: " . $keterangan_pembayaran;
                     $keterangan_final = $denda_curr['keterangan'] . (!empty($denda_curr['keterangan']) ? "\n" : "") . $keterangan_log;
 
-                    // Sesuaikan dengan kolom tabel Denda yang sederhana: id_admin_pencatat, tgl_transaksi_denda
-                    $stmt_update = $connect->prepare("UPDATE Denda SET jumlah_telah_dibayar = ?, tgl_transaksi_denda = ?, status_denda = ?, id_admin_pencatat = ?, keterangan = ? WHERE id_denda = ?");
+                    $stmt_update = $connect->prepare(
+                        "UPDATE Denda SET 
+                            jumlah_telah_dibayar = ?, 
+                            tgl_transaksi_denda = ?, 
+                            status_denda = ?, 
+                            keterangan = ? 
+                        WHERE id_denda = ?"
+                    );
                     if (!$stmt_update) throw new Exception("Gagal menyiapkan statement (update denda): " . $connect->error);
                     
-                    $stmt_update->bind_param("dssisi", $total_sudah_dibayar_baru, $tgl_pembayaran, $status_denda_baru, $id_admin_logged_in, $keterangan_final, $id_denda_bayar);
+                    $stmt_update->bind_param(
+                        "dsssi", 
+                        $total_sudah_dibayar_baru, 
+                        $tgl_pembayaran, 
+                        $status_denda_baru, 
+                        $keterangan_final, 
+                        $id_denda_bayar
+                    );
                     
                     if ($stmt_update->execute()) {
                         $connect->commit();
@@ -172,7 +227,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Proses Hapuskan Denda (yang sudah tercatat)
     if (isset($_POST['hapuskan_denda_submit'])) {
         $id_denda_hapus = isset($_POST['id_denda_hapus_modal_hidden_confirm']) ? (int)$_POST['id_denda_hapus_modal_hidden_confirm'] : 0;
         $alasan_hapus = trim($_POST['keterangan_hapus_modal_input_confirm'] ?? '');
@@ -193,13 +247,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt_get_data->close();
             }
-            $keterangan_final_hapus = $current_keterangan . (!empty($current_keterangan) ? "\n" : "") . "Dihapuskan oleh Admin ID: " . $id_admin_logged_in . " pada " . date('Y-m-d H:i:s') . ". Alasan: " . $alasan_hapus;
+            $keterangan_final_hapus = $current_keterangan . (!empty($current_keterangan) ? "\n" : "") . "Denda Dihapuskan pada " . date('Y-m-d H:i:s') . ". Alasan: " . $alasan_hapus; // Admin ID dihilangkan
 
-            // Sesuaikan dengan kolom tabel Denda yang sederhana
-            // Saat dihapuskan, status jadi 'Dihapuskan', jumlah_telah_dibayar diisi sama dengan jumlah_denda_dikenakan
-            $stmt = $connect->prepare("UPDATE Denda SET status_denda = 'Dihapuskan', id_admin_pencatat = ?, keterangan = ?, jumlah_telah_dibayar = ?, tgl_transaksi_denda = CURDATE() WHERE id_denda = ?");
+            $stmt = $connect->prepare(
+                "UPDATE Denda SET 
+                    status_denda = 'Dihapuskan', 
+                    keterangan = ?, 
+                    jumlah_telah_dibayar = ?, 
+                    tgl_transaksi_denda = CURDATE() 
+                WHERE id_denda = ?"
+            );
             if ($stmt) {
-                $stmt->bind_param("isdi", $id_admin_logged_in, $keterangan_final_hapus, $denda_dikenakan_saat_hapus, $id_denda_hapus);
+                $stmt->bind_param("sdi", $keterangan_final_hapus, $denda_dikenakan_saat_hapus, $id_denda_hapus);
                 if ($stmt->execute()) {
                     $_SESSION['success_message'] = "Denda ID #$id_denda_hapus berhasil ditandai sebagai 'Dihapuskan'.";
                 } else {
@@ -217,14 +276,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// --- PENGAMBILAN DATA UNTUK DITAMPILKAN ---
 $search_term_pinjam = $_GET['search_pinjam'] ?? ''; 
 $filter_status_denda = $_GET['filter_status_denda'] ?? '';
 $search_term_denda = $_GET['search_denda'] ?? '';
 
-// 1. Ambil Peminjaman Aktif yang Berpotensi Denda
 $sql_pinjaman_aktif = "SELECT 
-                            p.id_peminjaman, p.tgl_pinjam,
+                            p.id_peminjaman, p.tgl_pinjam, p.id_buku,
                             s.nama AS nama_siswa, s.nisn AS nisn_siswa,
                             b.judul AS judul_buku,
                             (SELECT COUNT(*) FROM Denda d_check WHERE d_check.id_peminjaman = p.id_peminjaman AND d_check.status_denda IN ('Belum Lunas')) AS denda_belum_lunas_count
@@ -244,10 +301,8 @@ if (!empty($search_term_pinjam)) {
     }
 }
 if (!empty($conditions_pinjam_aktif)) {
-    $sql_pinjaman_aktif .= " AND (" . implode(" AND ", $conditions_pinjam_aktif) . ")"; // Menggunakan AND karena WHERE p.status sudah ada
+    $sql_pinjaman_aktif .= " AND (" . implode(" AND ", $conditions_pinjam_aktif) . ")";
 }
-// Filter tambahan: hanya tampilkan yang BELUM memiliki denda 'Belum Lunas'
-$sql_pinjaman_aktif .= " HAVING denda_belum_lunas_count = 0";
 $sql_pinjaman_aktif .= " ORDER BY p.tgl_pinjam ASC";
 
 $stmt_pinjaman_aktif = $connect->prepare($sql_pinjaman_aktif);
@@ -262,37 +317,34 @@ if($stmt_pinjaman_aktif){
     $error_message .= '<div class="alert alert-danger">Gagal menyiapkan daftar peminjaman aktif: ' . $connect->error . '</div>';
 }
 
-// 2. Ambil Daftar Denda yang Sudah Tercatat
-// Menggunakan id_admin_pencatat dan tgl_transaksi_denda dari tabel Denda sederhana
 $sql_denda_tercatat = "SELECT 
-                        d.id_denda, 
-                        p.id_peminjaman, 
-                        s.nama AS nama_siswa, s.nisn AS nisn_siswa,
-                        b.judul AS judul_buku, 
-                        d.jumlah_denda_dikenakan, 
-                        d.jumlah_telah_dibayar,
-                        d.status_denda, 
-                        d.tgl_transaksi_denda, 
-                        adm.nama_admin AS nama_admin_pencatat,
-                        d.keterangan
-                    FROM Denda d
-                    JOIN Peminjaman p ON d.id_peminjaman = p.id_peminjaman
-                    JOIN Siswa s ON p.id_siswa = s.id_siswa
-                    JOIN Buku b ON p.id_buku = b.id_buku
-                    LEFT JOIN admin adm ON d.id_admin_pencatat = adm.id 
-                    ";
+                            d.id_denda, 
+                            p.id_peminjaman, 
+                            s.nama AS nama_siswa, s.nisn AS nisn_siswa,
+                            b.judul AS judul_buku, 
+                            d.jumlah_denda_dikenakan, 
+                            d.jumlah_telah_dibayar,
+                            d.status_denda, 
+                            d.tgl_transaksi_denda, 
+                            d.keterangan
+                        FROM Denda d
+                        JOIN Peminjaman p ON d.id_peminjaman = p.id_peminjaman
+                        JOIN Siswa s ON p.id_siswa = s.id_siswa
+                        JOIN Buku b ON p.id_buku = b.id_buku
+                        ";
 $conditions_denda = [];
 $params_denda = [];
 $types_denda = '';
+
 if (!empty($filter_status_denda)) {
     $conditions_denda[] = "d.status_denda = ?";
     $params_denda[] = $filter_status_denda;
     $types_denda .= 's';
 }
 if (!empty($search_term_denda)) {
-    $conditions_denda[] = "(s.nama LIKE ? OR s.nisn LIKE ? OR b.judul LIKE ? OR CAST(p.id_peminjaman AS CHAR) LIKE ? OR CAST(d.id_denda AS CHAR) LIKE ?)";
+    $conditions_denda[] = "(s.nama LIKE ? OR s.nisn LIKE ? OR b.judul LIKE ? OR CAST(p.id_peminjaman AS CHAR) LIKE ? OR CAST(d.id_denda AS CHAR) LIKE ? OR d.keterangan LIKE ?)";
     $like_search_denda = "%" . $search_term_denda . "%";
-    for ($i = 0; $i < 5; $i++) {
+    for ($i = 0; $i < 6; $i++) { 
         $params_denda[] = $like_search_denda;
         $types_denda .= 's';
     }
@@ -301,10 +353,11 @@ if (!empty($conditions_denda)) {
     $sql_denda_tercatat .= " WHERE " . implode(" AND ", $conditions_denda);
 }
 $sql_denda_tercatat .= " ORDER BY CASE d.status_denda 
-                        WHEN 'Belum Lunas' THEN 1
-                        WHEN 'Lunas' THEN 2      -- Tidak ada 'Dibayar Sebagian' di ENUM sederhana
-                        WHEN 'Dihapuskan' THEN 3
-                        ELSE 4 END, d.tgl_transaksi_denda DESC, d.id_denda DESC";
+                            WHEN 'Belum Lunas' THEN 1
+                            WHEN 'Lunas' THEN 2
+                            WHEN 'Dihapuskan' THEN 3
+                            ELSE 4 END, 
+                            d.tgl_transaksi_denda DESC, d.id_denda DESC";
 
 $stmt_denda_tercatat = $connect->prepare($sql_denda_tercatat);
 $result_denda_tercatat = null;
@@ -329,7 +382,7 @@ include_once __DIR__ . '/../../../layout/header.php';
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 fw-bold text-primary"><i class="fas fa-book-reader me-1"></i> Peminjaman Aktif Berpotensi Denda</h6>
+            <h6 class="m-0 fw-bold text-primary"><i class="fas fa-book-reader me-1"></i> Peminjaman Aktif (Status Pinjam)</h6>
         </div>
         <div class="card-body">
             <form method="GET" action="#peminjamanAktifAnchor" class="row g-3 mb-3"> <a id="peminjamanAktifAnchor"></a>
@@ -352,13 +405,14 @@ include_once __DIR__ . '/../../../layout/header.php';
                             <th>Jatuh Tempo</th>
                             <th class="text-center">Keterlambatan</th>
                             <th class="text-end">Estimasi Denda (Rp)</th>
-                            <th class="text-center">Aksi</th>
+                            <th class="text-center" style="min-width: 200px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php
-                    $ada_peminjaman_aktif_berpotensi_denda = false;
+                    $ada_peminjaman_aktif = false;
                     if ($result_pinjaman_aktif && $result_pinjaman_aktif->num_rows > 0):
+                        $ada_peminjaman_aktif = true;
                         while($p_aktif = $result_pinjaman_aktif->fetch_assoc()):
                             $estimasi_denda_item = 0;
                             $hari_terlambat_item = 0;
@@ -372,6 +426,7 @@ include_once __DIR__ . '/../../../layout/header.php';
                                 $tgl_jatuh_tempo_item_obj->modify('+' . DURASI_PINJAM_HARI_DEFAULT . ' days');
                                 $now_obj_item = new DateTime();
                                 $now_obj_item->setTime(0,0,0);
+                                
                                 if ($now_obj_item > $tgl_jatuh_tempo_item_obj) {
                                     $interval_item = $now_obj_item->diff($tgl_jatuh_tempo_item_obj);
                                     $hari_terlambat_item = $interval_item->days;
@@ -380,13 +435,15 @@ include_once __DIR__ . '/../../../layout/header.php';
                                         $estimasi_denda_item = $periode_efektif_item * DENDA_PER_PERIODE_DEFAULT;
                                         $status_terlambat_text_item = $hari_terlambat_item . " hari";
                                         $badge_estimasi = "bg-danger";
-                                        $ada_peminjaman_aktif_berpotensi_denda = true;
                                     } else {
+                                        $hari_terlambat_item = 0;
                                         $status_terlambat_text_item = "<em>Tidak terlambat</em>";
                                         $badge_estimasi = "bg-success";
                                     }
                                 } else {
-                                    $badge_estimasi = "bg-primary";
+                                    $hari_terlambat_item = 0;
+                                    $status_terlambat_text_item = ($now_obj_item == $tgl_jatuh_tempo_item_obj) ? "<em>Jatuh tempo hari ini</em>" : "<em>Belum jatuh tempo</em>";
+                                    $badge_estimasi = ($now_obj_item == $tgl_jatuh_tempo_item_obj) ? "bg-warning text-dark" : "bg-primary";
                                 }
                             } catch (Exception $e) {
                                 $status_terlambat_text_item = "<em class='text-danger'>Error tgl</em>";
@@ -401,36 +458,43 @@ include_once __DIR__ . '/../../../layout/header.php';
                             <td class="text-center"><span class="badge <?= $badge_estimasi ?>"><?= $status_terlambat_text_item ?></span></td>
                             <td class="text-end fw-bold"><?= number_format($estimasi_denda_item, 0, ',', '.') ?></td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-primary btn-sm"
-                                        data-bs-toggle="modal" data-bs-target="#modalCatatDendaPengembalian"
-                                        data-id-peminjaman="<?= $p_aktif['id_peminjaman'] ?>"
-                                        data-nama-siswa="<?= htmlspecialchars($p_aktif['nama_siswa']) ?>"
-                                        data-judul-buku="<?= htmlspecialchars($p_aktif['judul_buku']) ?>"
-                                        data-tgl-pinjam="<?= htmlspecialchars(date('d M Y', strtotime($p_aktif['tgl_pinjam']))) ?>"
-                                        data-tgl-jatuh-tempo="<?= $tgl_jatuh_tempo_item_obj ? htmlspecialchars($tgl_jatuh_tempo_item_obj->format('d M Y')) : '' ?>"
-                                        data-hari-terlambat="<?= $hari_terlambat_item ?>"
-                                        data-estimasi-denda="<?= $estimasi_denda_item ?>"
-                                        title="Catat Denda & Proses Pengembalian">
-                                    <i class="fas fa-clipboard-check me-1"></i> Proses
-                                </button>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-primary"
+                                            data-bs-toggle="modal" data-bs-target="#modalCatatDendaPengembalian"
+                                            data-id-peminjaman="<?= $p_aktif['id_peminjaman'] ?>"
+                                            data-nama-siswa="<?= htmlspecialchars($p_aktif['nama_siswa']) ?>"
+                                            data-judul-buku="<?= htmlspecialchars($p_aktif['judul_buku']) ?>"
+                                            data-tgl-pinjam="<?= htmlspecialchars(date('d M Y', strtotime($p_aktif['tgl_pinjam']))) ?>"
+                                            data-tgl-jatuh-tempo="<?= $tgl_jatuh_tempo_item_obj ? htmlspecialchars($tgl_jatuh_tempo_item_obj->format('d M Y')) : '' ?>"
+                                            data-hari-terlambat="<?= $hari_terlambat_item ?>"
+                                            data-estimasi-denda="<?= $estimasi_denda_item ?>"
+                                            title="Proses Pengembalian & Catat Denda (Jika Ada)">
+                                        <i class="fas fa-undo me-1"></i> Kembali
+                                    </button>
+                                    <button type="button" class="btn btn-danger"
+                                            data-bs-toggle="modal" data-bs-target="#modalLaporkanHilang"
+                                            data-id-peminjaman-hilang="<?= $p_aktif['id_peminjaman'] ?>"
+                                            data-id-buku-hilang="<?= $p_aktif['id_buku'] ?>"
+                                            data-nama-siswa-hilang="<?= htmlspecialchars($p_aktif['nama_siswa']) ?>"
+                                            data-judul-buku-hilang="<?= htmlspecialchars($p_aktif['judul_buku']) ?>"
+                                            title="Laporkan Buku Hilang & Tetapkan Denda">
+                                        <i class="fas fa-book-dead me-1"></i> Hilang
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     <?php
                         endwhile;
                     else: ?>
-                         <tr><td colspan="8" class="text-center py-3"><em>Tidak ada peminjaman aktif yang cocok dengan pencarian Anda, atau semua sudah memiliki denda aktif.</em></td></tr>
+                        <tr><td colspan="8" class="text-center py-3"><em>Tidak ada peminjaman aktif (status 'PINJAM') yang cocok dengan pencarian Anda.</em></td></tr>
                     <?php
                     endif;
-                     if ($result_pinjaman_aktif && $result_pinjaman_aktif->num_rows > 0 && !$ada_peminjaman_aktif_berpotensi_denda && empty($search_term_pinjam) && $result_pinjaman_aktif->num_rows > 0) { // Hanya tampil jika ada data dan memang tidak ada yang telat
-                        echo '<tr><td colspan="8" class="text-center py-3 text-success"><em>Tidak ada peminjaman aktif yang terlambat saat ini.</em></td></tr>';
-                    }
                     ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -448,19 +512,19 @@ include_once __DIR__ . '/../../../layout/header.php';
                     </select>
                 </div>
                 <div class="col-md-6 col-lg-7">
-                    <label for="search_denda" class="form-label">Cari Denda Tercatat (Nama/NISN Siswa, Judul, ID Pinjam/Denda):</label>
+                    <label for="search_denda" class="form-label">Cari Denda (Nama/NISN, Judul, ID Pinjam/Denda, Keterangan):</label>
                     <input type="text" name="search_denda" id="search_denda" class="form-control form-control-sm" value="<?= htmlspecialchars($search_term_denda) ?>" placeholder="Masukkan kata kunci...">
                 </div>
                 <div class="col-md-2 col-lg-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary btn-sm w-100 me-1"><i class="fas fa-search me-1"></i> Cari</button>
-                     <a href="<?= strtok($_SERVER["REQUEST_URI"], '?') ?>#dendaTercatatAnchor" class="btn btn-outline-secondary btn-sm w-100" title="Reset Filter Denda"><i class="fas fa-undo"></i></a>
+                    <a href="<?= strtok($_SERVER["REQUEST_URI"], '?') ?>#dendaTercatatAnchor" class="btn btn-outline-secondary btn-sm w-100" title="Reset Filter Denda"><i class="fas fa-undo"></i></a>
                 </div>
             </form>
             <div class="table-responsive">
                 <table class="table table-sm table-bordered table-striped table-hover" id="dataTableDendaTercatat" width="100%" cellspacing="0">
                     <thead class="table-dark">
                         <tr>
-                            <th>ID</th>
+                            <th>ID Denda</th>
                             <th>ID Pinjam</th>
                             <th>Siswa (NISN)</th>
                             <th>Judul Buku</th>
@@ -468,8 +532,7 @@ include_once __DIR__ . '/../../../layout/header.php';
                             <th class="text-end">Dibayar (Rp)</th>
                             <th class="text-center">Status</th>
                             <th>Tgl Transaksi</th>
-                            <th>Admin Pencatat</th>
-                            <th>Keterangan</th>
+                            <th class="text-center">Keterangan</th>
                             <th class="text-center" style="width:100px;">Aksi</th>
                         </tr>
                     </thead>
@@ -477,9 +540,11 @@ include_once __DIR__ . '/../../../layout/header.php';
                         <?php if ($result_denda_tercatat && $result_denda_tercatat->num_rows > 0): ?>
                             <?php while($denda = $result_denda_tercatat->fetch_assoc()): 
                                 $sisa_denda = $denda['jumlah_denda_dikenakan'] - $denda['jumlah_telah_dibayar'];
+                                $is_buku_hilang = (stripos($denda['keterangan'], 'BUKU HILANG') !== false);
                             ?>
                                 <tr class="<?php 
-                                    if ($denda['status_denda'] == 'Belum Lunas' && $sisa_denda > 0) echo 'table-danger';
+                                    if ($denda['status_denda'] == 'Belum Lunas' && $sisa_denda > 0) echo 'table-warning';
+                                    if ($is_buku_hilang && $denda['status_denda'] == 'Belum Lunas') echo ' table-danger fw-bold';
                                 ?>">
                                     <td><?= $denda['id_denda'] ?></td>
                                     <td><?= $denda['id_peminjaman'] ?></td>
@@ -495,11 +560,19 @@ include_once __DIR__ . '/../../../layout/header.php';
                                         else if ($denda['status_denda'] == 'Dihapuskan') $badge_class = 'bg-info text-dark';
                                         ?>
                                         <span class="badge <?= $badge_class ?>"><?= htmlspecialchars($denda['status_denda']) ?></span>
+                                        <?php if ($is_buku_hilang): ?>
+                                            <span class="badge bg-dark mt-1">Buku Hilang</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td><?= htmlspecialchars(date('d M Y', strtotime($denda['tgl_transaksi_denda']))) ?></td>
-                                    <td><?= htmlspecialchars($denda['nama_admin_pencatat'] ?? '-') ?></td>
-                                    <td title="<?= htmlspecialchars($denda['keterangan']) ?>">
-                                        <?= nl2br(htmlspecialchars(mb_strimwidth($denda['keterangan'], 0, 35, "..."))) ?>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-outline-info btn-sm btn-lihat-detail"
+                                                data-bs-toggle="modal" data-bs-target="#modalDetailKeterangan"
+                                                data-id-denda="<?= $denda['id_denda'] ?>"
+                                                data-keterangan="<?= htmlspecialchars($denda['keterangan']) ?>"
+                                                title="Lihat Detail Keterangan & Riwayat">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
                                     </td>
                                     <td class="text-center">
                                          <div class="btn-group" role="group">
@@ -519,18 +592,18 @@ include_once __DIR__ . '/../../../layout/header.php';
                                                     data-id-denda-hapus="<?= $denda['id_denda'] ?>"
                                                     data-nama-siswa-hapus="<?= htmlspecialchars($denda['nama_siswa']) ?>"
                                                     data-judul-buku-hapus="<?= htmlspecialchars($denda['judul_buku']) ?>"
-                                                    title="Hapuskan Denda">
+                                                    title="Hapuskan Denda (Bebaskan dari Pembayaran)">
                                                 <i class="fas fa-eraser"></i>
                                             </button>
                                         <?php else: ?>
-                                            <button class="btn btn-secondary btn-sm" disabled title="Sudah Lunas/Dihapuskan"><i class="fas fa-check-circle"></i></button>
+                                            <button class="btn btn-secondary btn-sm" disabled title="Sudah <?= strtolower(htmlspecialchars($denda['status_denda'])) ?>"><i class="fas fa-check-circle"></i></button>
                                         <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
-                            <tr><td colspan="11" class="text-center py-4"><em>Tidak ada data denda yang cocok dengan filter atau pencarian Anda.</em></td></tr>
+                            <tr><td colspan="10" class="text-center py-4"><em>Tidak ada data denda yang cocok dengan filter atau pencarian Anda.</em></td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -538,12 +611,14 @@ include_once __DIR__ . '/../../../layout/header.php';
         </div>
     </div>
 
-</div> <div class="modal fade" id="modalCatatDendaPengembalian" tabindex="-1" aria-labelledby="modalCatatDendaPengembalianLabel" aria-hidden="true">
+</div> 
+
+<div class="modal fade" id="modalCatatDendaPengembalian" tabindex="-1" aria-labelledby="modalCatatDendaPengembalianLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <form method="POST" action="<?= $_SERVER['PHP_SELF'] . '?' . http_build_query($_GET) // Pertahankan filter/search saat submit ?>">
+            <form method="POST" action="<?= $_SERVER['PHP_SELF'] . '?' . http_build_query($_GET) ?>">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalCatatDendaPengembalianLabel"><i class="fas fa-book-dead me-2"></i> Catat Denda & Proses Pengembalian Buku</h5>
+                    <h5 class="modal-title" id="modalCatatDendaPengembalianLabel"><i class="fas fa-undo me-2"></i> Catat Denda & Proses Pengembalian Buku</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -556,8 +631,8 @@ include_once __DIR__ . '/../../../layout/header.php';
                         </div>
                         <div class="col-md-6">
                             <p><strong>Jatuh Tempo:</strong> <span id="catat_tgl_jatuh_tempo_modal_text"></span></p>
-                            <p><strong>Hari Terlambat:</strong> <span id="catat_hari_terlambat_modal_text" class="fw-bold text-danger"></span></p>
-                            <p><strong>Estimasi Denda Saat Ini:</strong> Rp <span id="catat_estimasi_denda_modal_text" class="fw-bold text-danger"></span></p>
+                            <p><strong>Hari Terlambat:</strong> <span id="catat_hari_terlambat_modal_text" class="fw-bold"></span></p>
+                            <p><strong>Estimasi Denda Keterlambatan:</strong> Rp <span id="catat_estimasi_denda_modal_text" class="fw-bold"></span></p>
                         </div>
                     </div>
                     <hr>
@@ -565,6 +640,7 @@ include_once __DIR__ . '/../../../layout/header.php';
                         <div class="col-md-4 mb-3">
                             <label for="jumlah_denda_dikenakan_catat_modal_input" class="form-label">Jumlah Denda Dikenakan (Rp) <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="jumlah_denda_dikenakan_catat_modal_input" name="jumlah_denda_dikenakan_catat_modal" readonly>
+                            <small class="form-text text-muted">Otomatis dari estimasi keterlambatan. Tidak bisa diubah.</small>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="jumlah_dibayar_sekarang_catat_modal_input" class="form-label">Jumlah Dibayar Sekarang (Rp) <span class="text-danger">*</span></label>
@@ -576,13 +652,55 @@ include_once __DIR__ . '/../../../layout/header.php';
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="keterangan_catat_modal_input" class="form-label">Keterangan (Opsional)</label>
+                        <label for="keterangan_catat_modal_input" class="form-label">Keterangan Awal (Opsional)</label>
                         <textarea class="form-control" id="keterangan_catat_modal_input" name="keterangan_catat_modal" rows="2" placeholder="Misal: Diberi keringanan, dll."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" name="catat_denda_dan_pengembalian_submit" class="btn btn-primary"><i class="fas fa-check-circle me-1"></i> Simpan & Proses Pengembalian</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalLaporkanHilang" tabindex="-1" aria-labelledby="modalLaporkanHilangLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="<?= $_SERVER['PHP_SELF'] . '?' . http_build_query($_GET) ?>">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalLaporkanHilangLabel"><i class="fas fa-book-dead me-2"></i> Laporkan Buku Hilang</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id_peminjaman_hilang_modal" id="id_peminjaman_hilang_modal_hidden">
+                    <input type="hidden" name="id_buku_hilang_modal" id="id_buku_hilang_modal_hidden">
+                    
+                    <p><strong>Siswa:</strong> <span id="hilang_nama_siswa_modal_text"></span></p>
+                    <p><strong>Buku:</strong> <span id="hilang_judul_buku_modal_text"></span></p>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="jumlah_denda_buku_hilang_modal_input" class="form-label">Jumlah Denda Buku Hilang (Rp) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="jumlah_denda_buku_hilang_modal_input" name="jumlah_denda_buku_hilang_modal" required placeholder="Masukkan nominal denda pengganti...">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="tgl_lapor_hilang_modal_input" class="form-label">Tanggal Dilaporkan Hilang <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="tgl_lapor_hilang_modal_input" name="tgl_lapor_hilang_modal" value="<?= date('Y-m-d') ?>" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="keterangan_hilang_modal_input" class="form-label">Keterangan Tambahan (Wajib untuk Buku Hilang)</label>
+                        <textarea class="form-control" id="keterangan_hilang_modal_input" name="keterangan_hilang_modal" rows="2" placeholder="Contoh: Buku hilang saat perjalanan pulang." required></textarea>
+                    </div>
+                    <div class="alert alert-warning small">
+                        <strong>Perhatian:</strong> Melaporkan buku hilang akan mengubah status peminjaman menjadi 'HILANG', mencatat denda yang Anda tetapkan, dan mengurangi stok buku terkait sebanyak 1. Keterangan "BUKU HILANG" akan ditambahkan otomatis.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" name="laporkan_buku_hilang_submit" class="btn btn-danger"><i class="fas fa-exclamation-triangle me-1"></i> Proses Buku Hilang & Catat Denda</button>
                 </div>
             </form>
         </div>
@@ -634,27 +752,48 @@ include_once __DIR__ . '/../../../layout/header.php';
      <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="<?= $_SERVER['PHP_SELF'] . '?' . http_build_query($_GET) ?>">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="modalHapuskanDendaLabelConfirm"><i class="fas fa-exclamation-triangle me-2"></i> Konfirmasi Penghapusan Denda</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="modalHapuskanDendaLabelConfirm"><i class="fas fa-eraser me-2"></i> Konfirmasi Penghapusan Denda</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="id_denda_hapus_modal_hidden_confirm" id="id_denda_hapus_modal_hidden_confirm_val">
-                    <p>Anda yakin ingin menghapuskan denda untuk siswa <strong id="nama_siswa_hapus_modal_text_confirm"></strong> pada buku "<strong id="judul_buku_hapus_modal_text_confirm_val"></strong>"?</p>
-                    <p class="text-muted small">Status denda akan diubah menjadi 'Dihapuskan' dan dianggap lunas. Tindakan ini akan dicatat.</p>
+                    <p>Anda yakin ingin menghapuskan (membebaskan dari pembayaran) denda untuk siswa <strong id="nama_siswa_hapus_modal_text_confirm"></strong> pada buku "<strong id="judul_buku_hapus_modal_text_confirm_val"></strong>"?</p>
+                    <p class="text-muted small">Status denda akan diubah menjadi 'Dihapuskan' dan dianggap lunas secara finansial. Tindakan ini akan dicatat.</p>
                     <div class="mb-3">
                         <label for="keterangan_hapus_modal_input_confirm_val" class="form-label">Alasan/Keterangan Penghapusan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="keterangan_hapus_modal_input_confirm_val" name="keterangan_hapus_modal_input_confirm" rows="3" placeholder="Contoh: Kebijakan sekolah, buku rusak, dll." required></textarea>
+                        <textarea class="form-control" id="keterangan_hapus_modal_input_confirm_val" name="keterangan_hapus_modal_input_confirm" rows="3" placeholder="Contoh: Kebijakan sekolah, buku rusak tapi diganti non-uang, dll." required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" name="hapuskan_denda_submit" class="btn btn-danger"><i class="fas fa-trash-alt me-1"></i> Ya, Hapuskan Denda</button>
+                    <button type="submit" name="hapuskan_denda_submit" class="btn btn-warning text-dark"><i class="fas fa-check-circle me-1"></i> Ya, Hapuskan Denda</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modalDetailKeterangan" tabindex="-1" aria-labelledby="modalDetailKeteranganLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetailKeteranganLabel">Detail Keterangan & Riwayat Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Denda ID:</strong> <span id="detail_keterangan_id_denda"></span></p>
+                <hr>
+                <strong>Isi Keterangan & Riwayat:</strong>
+                <div id="detail_keterangan_isi" style="white-space: pre-wrap; background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; border-radius: 5px; max-height: 400px; overflow-y: auto;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 function formatRupiah(angkaStr, prefix = false) {
@@ -669,17 +808,16 @@ function formatRupiah(angkaStr, prefix = false) {
         separator = sisa ? '.' : '';
         rupiah += separator + ribuan.join('.');
     }
-    rupiah = split[1] != undefined ? rupiah + ',' + split[1].substr(0,2) : rupiah; // Ambil 2 desimal jika ada
+    rupiah = split[1] != undefined ? rupiah + ',' + split[1].substr(0,2) : rupiah;
     return prefix ? 'Rp ' + rupiah : rupiah;
 }
 
 function cleanNumericString(value) {
     if (typeof value !== 'string') value = String(value);
-    return value.replace(/[^0-9]/g, ''); // Hanya angka
+    return value.replace(/\D/g, '');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Modal Catat Denda & Proses Pengembalian
     var modalCatatDenda = document.getElementById('modalCatatDendaPengembalian');
     if (modalCatatDenda) {
         modalCatatDenda.addEventListener('show.bs.modal', function (event) {
@@ -689,39 +827,70 @@ document.addEventListener('DOMContentLoaded', function () {
             modalCatatDenda.querySelector('#catat_judul_buku_modal_text').textContent = button.getAttribute('data-judul-buku');
             modalCatatDenda.querySelector('#catat_tgl_pinjam_modal_text').textContent = button.getAttribute('data-tgl-pinjam');
             modalCatatDenda.querySelector('#catat_tgl_jatuh_tempo_modal_text').textContent = button.getAttribute('data-tgl-jatuh-tempo');
-            modalCatatDenda.querySelector('#catat_hari_terlambat_modal_text').textContent = button.getAttribute('data-hari-terlambat') + ' hari';
             
-            var estimasiDenda = parseFloat(button.getAttribute('data-estimasi-denda'));
+            var hariTerlambat = parseInt(button.getAttribute('data-hari-terlambat')) || 0;
+            var estimasiDenda = parseFloat(button.getAttribute('data-estimasi-denda')) || 0;
+
+            modalCatatDenda.querySelector('#catat_hari_terlambat_modal_text').textContent = hariTerlambat + ' hari';
+            if (hariTerlambat > 0) {
+                modalCatatDenda.querySelector('#catat_hari_terlambat_modal_text').classList.add('text-danger');
+                modalCatatDenda.querySelector('#catat_estimasi_denda_modal_text').classList.add('text-danger');
+                 modalCatatDenda.querySelector('#catat_hari_terlambat_modal_text').classList.remove('text-success');
+                modalCatatDenda.querySelector('#catat_estimasi_denda_modal_text').classList.remove('text-success');
+            } else {
+                modalCatatDenda.querySelector('#catat_hari_terlambat_modal_text').classList.remove('text-danger');
+                 modalCatatDenda.querySelector('#catat_hari_terlambat_modal_text').classList.add('text-success');
+                modalCatatDenda.querySelector('#catat_estimasi_denda_modal_text').classList.remove('text-danger');
+                 modalCatatDenda.querySelector('#catat_estimasi_denda_modal_text').classList.add('text-success');
+            }
+            
             modalCatatDenda.querySelector('#catat_estimasi_denda_modal_text').textContent = formatRupiah(estimasiDenda);
             
             var inputDendaDikenakan = modalCatatDenda.querySelector('#jumlah_denda_dikenakan_catat_modal_input');
             inputDendaDikenakan.value = formatRupiah(estimasiDenda);
             
-            modalCatatDenda.querySelector('#jumlah_dibayar_sekarang_catat_modal_input').value = '0';
+            var inputDibayarSekarang = modalCatatDenda.querySelector('#jumlah_dibayar_sekarang_catat_modal_input');
+            if (estimasiDenda <= 0) {
+                inputDibayarSekarang.value = '0';
+            } else {
+                inputDibayarSekarang.value = '0';
+            }
+
             modalCatatDenda.querySelector('#tgl_pengembalian_catat_modal_input').value = '<?= date('Y-m-d') ?>';
             modalCatatDenda.querySelector('#keterangan_catat_modal_input').value = '';
-            inputDendaDikenakan.focus();
+            inputDibayarSekarang.focus();
         });
     }
     
-    ['jumlah_denda_dikenakan_catat_modal_input', 'jumlah_dibayar_sekarang_catat_modal_input'].forEach(function(id) {
-        var input = document.getElementById(id);
-        if (input) {
-            input.addEventListener('input', function(e) {
-                var cursorPosition = e.target.selectionStart;
-                var oldValue = e.target.value;
-                var cleanValue = cleanNumericString(this.value);
-                var formattedValue = formatRupiah(cleanValue);
-                e.target.value = formattedValue;
+     var inputBayarPengembalian = document.getElementById('jumlah_dibayar_sekarang_catat_modal_input');
+     if(inputBayarPengembalian){
+        inputBayarPengembalian.addEventListener('input', function(e){
+            this.value = formatRupiah(cleanNumericString(this.value));
+        });
+     }
 
-                // Menyesuaikan posisi kursor setelah format
-                var diff = formattedValue.length - oldValue.length;
-                // Perlu logika lebih canggih untuk posisi kursor yang tepat dengan separator ribuan
-            });
-        }
-    });
+    var modalLaporkanHilang = document.getElementById('modalLaporkanHilang');
+    if (modalLaporkanHilang) {
+        modalLaporkanHilang.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            modalLaporkanHilang.querySelector('#id_peminjaman_hilang_modal_hidden').value = button.getAttribute('data-id-peminjaman-hilang');
+            modalLaporkanHilang.querySelector('#id_buku_hilang_modal_hidden').value = button.getAttribute('data-id-buku-hilang');
+            modalLaporkanHilang.querySelector('#hilang_nama_siswa_modal_text').textContent = button.getAttribute('data-nama-siswa-hilang');
+            modalLaporkanHilang.querySelector('#hilang_judul_buku_modal_text').textContent = button.getAttribute('data-judul-buku-hilang');
+            
+            modalLaporkanHilang.querySelector('#jumlah_denda_buku_hilang_modal_input').value = '';
+            modalLaporkanHilang.querySelector('#tgl_lapor_hilang_modal_input').value = '<?= date('Y-m-d') ?>';
+            modalLaporkanHilang.querySelector('#keterangan_hilang_modal_input').value = '';
+            modalLaporkanHilang.querySelector('#jumlah_denda_buku_hilang_modal_input').focus();
+        });
+    }
+    var inputDendaHilang = document.getElementById('jumlah_denda_buku_hilang_modal_input');
+    if (inputDendaHilang) {
+        inputDendaHilang.addEventListener('input', function(e) {
+            this.value = formatRupiah(cleanNumericString(this.value));
+        });
+    }
 
-    // Modal Proses Pembayaran Lanjutan
     var modalProsesPembayaranLanjutan = document.getElementById('modalProsesPembayaran');
     if (modalProsesPembayaranLanjutan) {
         modalProsesPembayaranLanjutan.addEventListener('show.bs.modal', function (event) {
@@ -759,7 +928,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Modal Hapuskan Denda
     var modalHapuskanDendaConfirm = document.getElementById('modalHapuskanDenda');
     if (modalHapuskanDendaConfirm) {
         modalHapuskanDendaConfirm.addEventListener('show.bs.modal', function (event) {
@@ -775,6 +943,18 @@ document.addEventListener('DOMContentLoaded', function () {
             modalHapuskanDendaConfirm.querySelector('#judul_buku_hapus_modal_text_confirm_val').textContent = judulBukuHapus;
             modalHapuskanDendaConfirm.querySelector('#keterangan_hapus_modal_input_confirm_val').value = ''; 
             modalHapuskanDendaConfirm.querySelector('#keterangan_hapus_modal_input_confirm_val').focus();
+        });
+    }
+
+    var modalDetailKeterangan = document.getElementById('modalDetailKeterangan');
+    if (modalDetailKeterangan) {
+        modalDetailKeterangan.addEventListener('show.bs.modal', function(event) {
+            var button = event.relatedTarget;
+            var idDenda = button.getAttribute('data-id-denda');
+            var keterangan = button.getAttribute('data-keterangan');
+
+            modalDetailKeterangan.querySelector('#detail_keterangan_id_denda').textContent = idDenda;
+            modalDetailKeterangan.querySelector('#detail_keterangan_isi').textContent = keterangan; 
         });
     }
 });

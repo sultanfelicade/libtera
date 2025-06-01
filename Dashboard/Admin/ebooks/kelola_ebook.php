@@ -370,8 +370,6 @@ if (isset($_SESSION['error_message'])) {
             </form>
         </div>
 
-        <div class="card">
-            <div class="card-header">Daftar E-Book Tersedia</div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped table-bordered table-hover">
@@ -471,7 +469,7 @@ if (isset($_SESSION['error_message'])) {
                     </table>
                 </div>
             </div>
-        </div>
+        
     <?php endif; ?>
 </div>
 

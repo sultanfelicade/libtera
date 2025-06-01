@@ -126,11 +126,23 @@ $bukuQuery = $stmt->get_result();
                 </div>
             <?php endwhile; ?>
         <?php else: ?>
-            <div class="tulisan text-start ps-1">
+            <div class="tulisan text-start ps-1 w-100" style="max-width: 500px; margin: 0 auto;">
                 <?php include '_not_found_animation.php'; ?>
-                <h1 class="fw-bold mt-4" style="color: #555;">Oops! Buku Tidak Ditemukan</h1>
+                <h1 class="fw-bold mt-4" style="color: #555; font-size: 2rem;">Oops! Buku Tidak Ditemukan</h1>
                 <p class="text-muted">Coba gunakan kata kunci atau filter kategori yang berbeda.</p>
             </div>
+            <style>
+                @media (max-width: 600px) {
+                    .tulisan {
+                        margin: 24px 0 !important;
+                        max-width: 95vw !important;
+                    }
+                    .tulisan h1, .tulisan p {
+                        width: 100% !important;
+                        font-size: 1.2rem !important;
+                    }
+                }
+            </style>
         <?php endif; ?>
     </div>
 </div>

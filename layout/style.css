@@ -347,7 +347,8 @@ body { padding-top: 56px; }
 /* Variabel Warna Tema Cerah dengan Biru Gelap */
 :root {
     --navbar-primary-color: #2c3e50; /* Biru Gelap */
-    --navbar-accent-color: #0099ff;  /* Biru Lebih Terang (untuk hover/aksen) */
+    --navbar-accent-color: #0d6efd
+;  /* Biru Lebih Terang (untuk hover/aksen) */
     --navbar-text-color: #555;       /* Warna teks default */
     --navbar-text-active-color: #000000; /* Warna teks saat item aktif (di atas glider) */
     --navbar-icon-color: #7f8c8d;    /* Warna ikon default */
@@ -404,13 +405,14 @@ body { padding-top: 56px; }
 
 /* Styling untuk Link Aktif */
 .custom-vertical-navbar .nav-item.active .nav-link {
-    color: var(--navbar-text-active-color); /* Teks jadi putih di atas glider */
+    color: white; /* Teks jadi putih di atas glider */
     font-weight: 600;
+    background-color: var(--navbar-accent-color);
 }
 
 .custom-vertical-navbar .nav-item.active .nav-link .nav-icon,
 .custom-vertical-navbar .nav-item.active .nav-link .nav-text {
-    color: var(--navbar-text-active-color);
+    color: white;
 }
 
 /* Glider Indicator */

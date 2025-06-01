@@ -170,7 +170,7 @@ include_once '../../../layout/header.php';
                                             $denda_item = $periode_efektif_terlambat * DENDA_PER_PERIODE;
                                             $status_keterlambatan_text = "<span class='badge bg-danger'>" . $keterlambatan_hari . " hari</span>";
                                             if (PERIODE_DENDA_HARI === 7 && $periode_efektif_terlambat > 0) {
-                                                $status_keterlambatan_text .= " <small>(" . $periode_efektif_terlambat . " minggu denda)</small>";
+                                                $status_keterlambatan_text .= " <small>(Nunggak " . $periode_efektif_terlambat . " minggu)</small>";
                                             }
                                             $totalEstimasiDendaKeseluruhan += $denda_item;
                                             $row_class = 'table-warning';

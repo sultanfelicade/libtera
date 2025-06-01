@@ -7,6 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 24px;
   width: 100%; /* <-- Biarkan lebarnya fleksibel */
   max-width: 30em; /* <-- Batasi lebar maksimumnya agar tidak terlalu besar di desktop */
   /* height: 30em; */ /* Sebaiknya biarkan tinggi otomatis agar tidak terpotong */

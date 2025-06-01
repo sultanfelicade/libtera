@@ -53,17 +53,37 @@ $stmt->execute();
 $bukuQuery = $stmt->get_result();
 ?>
 
-<div class="container-fluid">
+<style>
+    .tulisan {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* membuat isinya (h1 dan p) berada di tengah horizontal */
+        justify-content: center;
+        text-align: center; /* kalau mau teksnya juga rata tengah */
+        margin: 300px;
+        margin-top: 32px;
+    }
+    .tulisan h1{
+        width: 500px;
+        font-size: 32px;
+    }
+    .tulisan p{
+        width: 500px;
+    }
+</style>
+<h1 class="h1 mb-2 ms-4">Daftar Buku</h1>
+
+<div class="container-fluid ps-4"> <!-- padding kiri -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-5">
-        <div class="category-scroll-container w-50">
+        <div class="category-scroll-container w-70">
             <div class="category-list">
-                    <a href="?" class="btn btn-<?= !$kategoriId && empty($searchTerm) ? 'primary' : 'outline-primary' ?>">Semua</a>
-                    <?php mysqli_data_seek($kategoriQuery, 0); // Reset pointer query kategori ?>
-                    <?php while($kategori = mysqli_fetch_assoc($kategoriQuery)): ?>
-                        <a href="?kategori=<?= $kategori['id_kategori'] ?>" class="btn btn-<?= ($kategoriId == $kategori['id_kategori']) ? 'primary' : 'outline-primary' ?>">
-                            <?= htmlspecialchars($kategori['nama_kategori']) ?>
-                        </a>
-                    <?php endwhile; ?>
+                <a href="?" class="btn btn-<?= !$kategoriId && empty($searchTerm) ? 'primary' : 'outline-primary' ?>">Semua</a>
+                <?php mysqli_data_seek($kategoriQuery, 0); ?>
+                <?php while($kategori = mysqli_fetch_assoc($kategoriQuery)): ?>
+                    <a href="?kategori=<?= $kategori['id_kategori'] ?>" class="btn btn-<?= ($kategoriId == $kategori['id_kategori']) ? 'primary' : 'outline-primary' ?>">
+                        <?= htmlspecialchars($kategori['nama_kategori']) ?>
+                    </a>
+                <?php endwhile; ?>
             </div>
         </div>
         <div class="input-container">
@@ -73,7 +93,7 @@ $bukuQuery = $stmt->get_result();
         </div>
     </div>
 
-    <h4 class="fw-bold h2 mb-4">
+    <h4 class="fw-bold h2 mt-3 mb-3 text-start">
         <?php 
             if(!empty($searchTerm)) {
                 echo 'Hasil Pencarian untuk: "' . htmlspecialchars($searchTerm) . '"';
@@ -86,16 +106,14 @@ $bukuQuery = $stmt->get_result();
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-5 g-4">
         <?php if($bukuQuery->num_rows > 0): ?>
             <?php while($buku = $bukuQuery->fetch_assoc()): ?>
-                
                 <div class="col">
                     <div class="flip-card">
                         <div class="flip-card-inner">
                             <div class="flip-card-front">
                                 <img src="/libtera/uploads/books/<?= htmlspecialchars($buku['cover']) ?>" alt="Cover: <?= htmlspecialchars($buku['judul']) ?>">
                             </div>
-                            
-                            <div class="flip-card-back">
-                                <h6 class="book-title text-truncate" title="<?= htmlspecialchars($buku['judul']) ?>"><?= htmlspecialchars($buku['judul']) ?></h6>
+                            <div class="flip-card-back text-start">
+                                <h6 class="book-title text-xs" title="<?= htmlspecialchars($buku['judul']) ?>"><?= htmlspecialchars($buku['judul']) ?></h6>
                                 <p class="book-author mb-2"><?= htmlspecialchars($buku['pengarang']) ?></p>
                                 <div class="book-rating mb-3">
                                     <i class="fa-solid fa-star"></i>
@@ -106,19 +124,17 @@ $bukuQuery = $stmt->get_result();
                         </div>
                     </div>
                 </div>
-                <?php endwhile; ?>
+            <?php endwhile; ?>
         <?php else: ?>
-            <div class="col-12 d-flex flex-column align-items-center justify-content-center mt-4">
-                <?php 
-                    // Panggil file animasi yang sudah kita buat
-                    include '_not_found_animation.php'; 
-                ?>
-                <h4 class="fw-bold mt-4" style="color: #555;">Oops! Buku Tidak Ditemukan</h4>
+            <div class="tulisan text-start ps-1">
+                <?php include '_not_found_animation.php'; ?>
+                <h1 class="fw-bold mt-4" style="color: #555;">Oops! Buku Tidak Ditemukan</h1>
                 <p class="text-muted">Coba gunakan kata kunci atau filter kategori yang berbeda.</p>
             </div>
         <?php endif; ?>
     </div>
 </div>
+
 <?php 
 // Selalu tutup statement setelah selesai
 $stmt->close();

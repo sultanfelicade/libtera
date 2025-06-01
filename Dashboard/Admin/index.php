@@ -195,8 +195,7 @@ if (isset($_SESSION['error_message'])) {
 ?>
 
 <div class="container-fluid mt-4">
-    <h2 class="mb-4">Kelola Data Buku</h2>
-
+    <h1 class="h2 mb-4">Kelola Data Buku</h1>
     <?= $message ?> <?php if ($action === 'add' || ($action === 'edit' && $id_buku_url)): ?>
         <?php
         $form_title = "Tambah Buku Baru";
@@ -298,7 +297,7 @@ if (isset($_SESSION['error_message'])) {
 
     <?php else: ?>
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-            <a href="<?= $_SERVER['PHP_SELF'] ?>?action=add" class="btn btn-success"><i class="fas fa-plus"></i> Tambah Buku Baru</a>
+            <a href="<?= $_SERVER['PHP_SELF'] ?>?action=add" class="btn w-25 btn-success"><i class="fas fa-plus"></i> Buku Baru</a>
             
             <form method="GET" action="" class="d-flex gap-2 w-100 w-md-auto">
                 <select name="kategori" class="form-select" onchange="this.form.submit()">
@@ -310,7 +309,7 @@ if (isset($_SESSION['error_message'])) {
                     <?php endforeach; ?>
                 </select>
                 <input class="form-control" type="search" name="search" placeholder="Judul atau pengarang..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-                <button class="btn btn-outline-primary" type="submit">Cari</button>
+                <button class="btn btn-primary" type="submit">Cari</button>
                  <?php if (!empty($_GET['search']) || !empty($_GET['kategori'])): ?>
                     <a href="<?= $_SERVER['PHP_SELF'] ?>" class="btn btn-outline-secondary">Reset</a>
                 <?php endif; ?>

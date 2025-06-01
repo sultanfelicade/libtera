@@ -66,41 +66,59 @@ if (!$stmtEbooks) {
 include_once __DIR__ . '/../../../layout/header.php'; // Panggil header setelah semua logika PHP
 ?>
 
-<div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Daftar E-Book</h1>
+<style>
+    .tulisan {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* membuat isinya (h1 dan p) berada di tengah horizontal */
+        justify-content: center;
+        text-align: center; /* kalau mau teksnya juga rata tengah */
+        margin: 300px;
+        margin-top: 32px;
+    }
+    .tulisan h1{
+        width: 500px;
+        font-size: 32px;
+    }
+    .tulisan p{
+        width: 500px;
+    }
+</style>
 
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-        <div class="category-scroll-container">
+<h1 class="h1 mb-2">Daftar E-Book</h1>
+<div class="container-fluid">
+   <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-5">
+        <div class="category-scroll-container w-70">
             <div class="category-list">
                 <a href="ebook.php" class="btn btn-<?= !$kategoriId && empty($searchTerm) ? 'primary' : 'outline-primary' ?> mb-1">Semua</a>
                 <?php if (!empty($kategoriList)): ?>
                     <?php foreach($kategoriList as $kategori): ?>
                         <a href="ebook.php?kategori=<?= $kategori['id_kategori'] ?><?= !empty($searchTerm) ? '&search='.urlencode($searchTerm) : '' ?>" 
-                           class="btn btn-<?= ($kategoriId == $kategori['id_kategori']) ? 'primary' : 'outline-primary' ?> mb-1">
+                        class="btn btn-<?= ($kategoriId == $kategori['id_kategori']) ? 'primary' : 'outline-primary' ?> mb-1">
                             <?= htmlspecialchars($kategori['nama_kategori']) ?>
                         </a>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
         </div>
-        <div class="input-container" style="min-width: 250px;">
-            <form method="GET" action="ebook.php" class="d-flex">
-                <?php if ($kategoriId): ?>
-                    <input type="hidden" name="kategori" value="<?= htmlspecialchars($kategoriId) ?>">
-                <?php endif; ?>
-                <input class="form-control me-2" 
-                       type="search" name="search" placeholder="Cari Judul atau Penulis..." 
-                       value="<?= htmlspecialchars($searchTerm) ?>" aria-label="Cari E-Book">
-                <button class="btn btn-outline-success" type="submit">Cari</button>
+        <div class="input-container">
+            <form method="GET" action="">
+                <input class="input" type="search" name="search" placeholder="Judul atau pengarang..." value="<?= htmlspecialchars($searchTerm) ?>">
             </form>
         </div>
     </div>
+
     
     <?php if(!empty($searchTerm)): ?>
-        <h4 class="mb-4">Hasil pencarian untuk: "<?= htmlspecialchars($searchTerm) ?>"</h4>
-    <?php endif; ?>
+    <h4 class="fw-bold h2">
+        <?php 
+            if(!empty($searchTerm)) {
+                echo 'Hasil Pencarian untuk: "' . htmlspecialchars($searchTerm) . '"';
+            }
+        ?>
+    </h4>    <?php endif; ?>
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+    <div class="mt-3  row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
         <?php if($resultEbooks && $resultEbooks->num_rows > 0): ?>
             <?php while($ebook = $resultEbooks->fetch_assoc()): ?>
                 <div class="col d-flex align-items-stretch"> <?php
@@ -131,19 +149,17 @@ include_once __DIR__ . '/../../../layout/header.php'; // Panggil header setelah 
                     </div>
             <?php endwhile; ?>
         <?php else: ?>
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <?php
-                    $notFoundPath = __DIR__ . '/../_not_found_animation.php';
-                    if (file_exists($notFoundPath)) {
-                        include $notFoundPath;
-                    } else {
-                        echo "<p class='text-muted'>(Animasi buku tidak ditemukan)</p>";
-                    }
-                    ?>
-                    <h4 class="fw-bold mt-3" style="color: #555;">Oops! E-Book Tidak Ditemukan</h4>
-                    <p class="text-muted">Belum ada e-book yang sesuai dengan pencarian atau filter Anda.</p>
-                </div>
+             <div class="tulisan" >
+                <?php
+                        $notFoundPath = __DIR__ . '/../_not_found_animation.php';
+                        if (file_exists($notFoundPath)) {
+                            include $notFoundPath;
+                        } else {
+                            echo "<p class='text-muted'>(Animasi buku tidak ditemukan)</p>";
+                        }
+                ?>                
+                <h1 class="fw-bold mt-4" style="color: #555;">Oops! Buku Tidak Ditemukan</h1>
+                <p class="text-muted">Coba gunakan kata kunci atau filter kategori yang berbeda.</p>
             </div>
         <?php endif; ?>
     </div>

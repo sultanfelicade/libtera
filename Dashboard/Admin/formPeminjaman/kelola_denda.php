@@ -254,7 +254,7 @@ $stmt_pinjaman_aktif = $connect->prepare($sql_pinjaman_aktif);
 $result_pinjaman_aktif = null;
 if($stmt_pinjaman_aktif){
     if(!empty($params_pinjam_aktif)){
-        $stmt_pinjaman_aktif->bind_param($types_pinjam_aktif, ...$params_pinjaman_aktif);
+        $stmt_pinjaman_aktif->bind_param($types_pinjam_aktif, ...$params_pinjam_aktif);
     }
     $stmt_pinjaman_aktif->execute();
     $result_pinjaman_aktif = $stmt_pinjaman_aktif->get_result();
@@ -564,7 +564,7 @@ include_once __DIR__ . '/../../../layout/header.php';
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="jumlah_denda_dikenakan_catat_modal_input" class="form-label">Jumlah Denda Dikenakan (Rp) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="jumlah_denda_dikenakan_catat_modal_input" name="jumlah_denda_dikenakan_catat_modal" required>
+                            <input type="text" class="form-control" id="jumlah_denda_dikenakan_catat_modal_input" name="jumlah_denda_dikenakan_catat_modal" readonly>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="jumlah_dibayar_sekarang_catat_modal_input" class="form-label">Jumlah Dibayar Sekarang (Rp) <span class="text-danger">*</span></label>

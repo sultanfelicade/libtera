@@ -37,9 +37,14 @@ include_once __DIR__ . '/../../../layout/header.php';
 <div class="container-fluid"> <?php /* Atau ganti dengan class "container" jika ingin ada batas samping */ ?>
     <div class="d-flex justify-content-between align-items-center my-3 pt-3 pt-md-0">
         <h1 class="h4 mb-0 text-truncate" title="<?= htmlspecialchars($title) ?>"><?= htmlspecialchars($title) ?></h1>
-        <a href="ebook.php" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar E-Book
-        </a>
+        <div>
+            <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#aiModal">
+                <i class="fas fa-robot me-1"></i> Tanya AI
+            </button>
+            <a href="ebook.php" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar E-Book
+            </a>
+        </div>
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -57,7 +62,40 @@ include_once __DIR__ . '/../../../layout/header.php';
         </div>
     </div>
 
-    </div> <?php /* End container-fluid */ ?>
+</div> <?php /* End container-fluid */ ?>
+
+<div class="modal fade" id="aiModal" tabindex="-1" aria-labelledby="aiModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aiModalLabel"><i class="fas fa-robot me-2"></i>Fitur AI</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="aiPrompt" class="form-label">Ajukan pertanyaan terkait E-Book ini:</label>
+                    <textarea class="form-control" id="aiPrompt" rows="3" placeholder="Contoh: Jelaskan tentang bab ini"></textarea>
+                </div>
+                <div class="mb-3">
+                    <button id="askAiButton" class="btn btn-primary"><i class="fas fa-question-circle me-1"></i> Ajukan</button>
+                </div>
+                <div id="aiResponse" class="mt-3 border p-3 rounded bg-light" style="white-space: pre-wrap; overflow-y: auto; max-height: 300px;">
+                    </div>
+                <div id="aiLoading" class="mt-2 text-center" style="display:none;">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span>Memproses...</span>
+                </div>
+                <div id="aiError" class="mt-2 text-danger" style="display:none;">
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php
 // Sertakan JavaScript yang dibutuhkan dFlip (setelah konten utama)
@@ -75,6 +113,58 @@ include_once __DIR__ . '/../../../layout/header.php';
 <script src="<?php echo htmlspecialchars($dflipAssetsBaseUrl . 'js/libs/pdf.min.js'); ?>" type="text/javascript"></script>
 
 <script src="<?php echo htmlspecialchars($dflipAssetsBaseUrl . 'js/dflip.min.js'); ?>" type="text/javascript"></script>
+
+<script>
+    $(document).ready(function() {
+        const aiModal = $('#aiModal');
+        const aiPromptInput = $('#aiPrompt');
+        const askAiButton = $('#askAiButton');
+        const aiResponseDiv = $('#aiResponse');
+        const aiLoadingDiv = $('#aiLoading');
+        const aiErrorDiv = $('#aiError');
+
+        askAiButton.on('click', function() {
+            const prompt = aiPromptInput.val();
+            if (prompt.trim() !== "") {
+                aiResponseDiv.empty();
+                aiLoadingDiv.show();
+                aiErrorDiv.hide();
+
+                // Kirim permintaan ke backend AI Anda
+                $.ajax({
+                    url: 'gemini_api.php', // Pastikan path ini benar
+                    method: 'POST',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ prompt: prompt }),
+                    success: function(data) {
+                        aiLoadingDiv.hide();
+                        if (data.response) {
+                            aiResponseDiv.html(data.response);
+                        } else if (data.error) {
+                            aiErrorDiv.text('Error: ' + data.error).show();
+                        } else {
+                            aiErrorDiv.text('Error: Respon tidak valid dari server.').show();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        aiLoadingDiv.hide();
+                        aiErrorDiv.text('Error: ' + error).show();
+                        console.error("Error fetching AI response:", error);
+                    }
+                });
+            } else {
+                alert('Silakan masukkan pertanyaan Anda.');
+            }
+        });
+
+        aiModal.on('hidden.bs.modal', function() {
+            aiPromptInput.val(''); // Kosongkan input saat modal ditutup
+            aiResponseDiv.empty(); // Kosongkan respon
+            aiErrorDiv.hide(); // Sembunyikan error
+        });
+    });
+</script>
 
 <?php
 // Sertakan footer layout utama Anda

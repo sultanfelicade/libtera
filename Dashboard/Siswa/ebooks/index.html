@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coba Gemini API dengan PHP</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        textarea { width: 100%; min-height: 100px; margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        button { display: block; width: 100%; padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0056b3; }
+        #responseContainer { margin-top: 20px; }
+        #response { padding: 15px; border: 1px solid #eee; background-color: #f9f9f9; border-radius: 4px; white-space: pre-wrap; /* Agar format teks terjaga */ min-height: 50px; }
+        .loading { color: #007bff; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ai LibTera</h1>
+        <textarea id="promptInput" placeholder="Ketik pertanyaan Anda di sini..."></textarea>
+        <button onclick="kirimPertanyaan()">Kirim Pertanyaan</button>
+        
+        <div id="responseContainer">
+            <h2>Jawaban AI:</h2>
+            <div id="response" class="loading">Menunggu pertanyaan Anda...</div>
+        </div>
+    </div>
+
+    <script>
+        async function kirimPertanyaan() {
+            const promptText = document.getElementById('promptInput').value;
+            const responseDiv = document.getElementById('response');
+            
+            if (!promptText.trim()) {
+                responseDiv.textContent = 'Mohon masukkan pertanyaan terlebih dahulu.';
+                responseDiv.className = 'error'; // Tambahkan kelas error
+                return;
+            }
+
+            responseDiv.textContent = 'Sedang memproses permintaan Anda...';
+            responseDiv.className = 'loading'; // Tambahkan kelas loading
+
+            try {
+                // URL ini akan menunjuk ke file PHP Anda.
+                // Jika folder Anda 'gemini-saya', maka Laragon biasanya membuat URL seperti http://gemini-saya.test/gemini_api.php
+                // atau http://localhost/gemini-saya/gemini_api.php
+                // Sesuaikan dengan URL Laragon Anda.
+                const response = await fetch('gemini_api.php', { // Cukup panggil nama filenya jika index.html dan .php di folder yang sama
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt: promptText }) // Kirim prompt dalam format JSON
+                });
+
+                const data = await response.json(); // Ambil respons sebagai JSON
+
+                if (!response.ok) {
+                    // Jika server merespons dengan status error (misalnya 400, 500)
+                    const errorMessage = data.error || `Terjadi kesalahan HTTP: ${response.status}`;
+                    throw new Error(errorMessage + (data.details ? ` Detail: ${JSON.stringify(data.details)}` : ''));
+                }
+
+                responseDiv.textContent = data.response; // Tampilkan jawaban dari AI
+                responseDiv.className = ''; // Hapus kelas loading/error
+
+            } catch (error) {
+                console.error('Terjadi kesalahan:', error);
+                responseDiv.textContent = 'Gagal mendapatkan jawaban: ' + error.message;
+                responseDiv.className = 'error'; // Tambahkan kelas error
+            }
+        }
+    </script>
+</body>
+</html>

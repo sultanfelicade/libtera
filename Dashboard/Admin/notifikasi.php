@@ -111,7 +111,7 @@ include_once __DIR__ . '/../../layout/header.php';
             <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Template Pesan Email (Admin Dapat Mengedit)</h5>
         </div>
         <div class="card-body">
-            <p class="small text-muted">Gunakan placeholder berikut: [NAMA_SISWA], [NISN_SISWA], [JUDUL_BUKU], [TGL_PINJAM], [TGL_JATUH_TEMPO], [JUMLAH_DENDA_DIKENAKAN], [JUMLAH_TELAH_DIBAYAR], [SISA_DENDA], [KETERANGAN_DENDA]</p>
+            <p class="small text-muted"><strong>JANGAN UBAH BAGIAN</strong>: [NAMA_SISWA], [NISN_SISWA], [JUDUL_BUKU], [TGL_PINJAM], [TGL_JATUH_TEMPO], [JUMLAH_DENDA_DIKENAKAN], [JUMLAH_TELAH_DIBAYAR], [SISA_DENDA], [KETERANGAN_DENDA]</p>
             <textarea id="templateEmailAdmin" class="form-control" rows="15"><?php echo htmlspecialchars($templatePesanDefaultGlobal); ?></textarea>
             <div class="mt-2">
                 <label for="subjekEmailAdmin" class="form-label small">Subjek Email:</label>

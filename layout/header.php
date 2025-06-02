@@ -19,6 +19,9 @@ $role = $_SESSION["role"];
   <script src="/libtera/uploads/ebook/assets/js/dflip.min.js" type="text/javascript"></script>
   <link href="/libtera/uploads/ebook/assets/css/dflip.min.css" rel="stylesheet" type="text/css" />
   <link rel="stylesheet" href="/libtera/uploads/ebook/assets/css/themify-icons.min.css" type="text/css">
+  <!-- notifikasi admin email -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="/libtera/layout/style.css">

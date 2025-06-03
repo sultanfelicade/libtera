@@ -1,3 +1,13 @@
+<?php
+// Pastikan session sudah dimulai jika header atau footer Anda memerlukannya
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Include header
+// Sesuaikan path ini dengan struktur direktori Anda
+include_once __DIR__ . '/../../../layout/header.php'; 
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -7,29 +17,34 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Gaya CSS Anda tetap di sini, atau bisa dipindahkan ke file CSS eksternal 
+           dan di-link dari header.php atau langsung di sini */
         body {
             font-family: 'Poppins', Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            /* Padding body mungkin perlu disesuaikan jika header/footer punya tinggi tetap */
+            padding: 20px; 
             background-color: #f0f4f8;
             color: #333a45;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column; /* Mengubah flex-direction untuk mengakomodasi header/footer */
+            align-items: center; /* Pusatkan .container */
             min-height: 100vh;
             box-sizing: border-box;
         }
 
-        .container {
+        /* Pastikan .container tidak terpengaruh oleh styling global header/footer */
+        .ai-container { /* Mengganti nama kelas agar tidak konflik jika 'container' sudah dipakai di layout */
             width: 100%;
             max-width: 780px;
             background-color: #ffffff;
             padding: 35px 45px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            margin-top: 40px;
-            margin-bottom: 40px;
+            margin-top: 20px; /* Sesuaikan margin jika perlu */
+            margin-bottom: 20px; /* Sesuaikan margin jika perlu */
             animation: fadeInShowUp 0.6s ease-out forwards;
+            flex-grow: 1; /* Memastikan container mengisi ruang jika konten pendek */
         }
 
         @keyframes fadeInShowUp {
@@ -43,19 +58,19 @@
             }
         }
 
-        h1 {
+        .ai-container h1 {
             text-align: center;
             color: #2c3e50;
             margin-bottom: 15px;
             font-weight: 600;
             font-size: 2.3em;
         }
-        h1 .fa-book-reader {
+        .ai-container h1 .fa-book-reader {
             margin-right: 12px;
             color: #2980b9;
         }
 
-        .subtitle {
+        .ai-container .subtitle {
             text-align: center;
             color: #566573;
             margin-bottom: 35px;
@@ -63,7 +78,7 @@
             line-height: 1.6;
         }
 
-        textarea#promptInput {
+        .ai-container textarea#promptInput {
             width: 100%;
             min-height: 140px;
             margin-bottom: 20px;
@@ -77,13 +92,13 @@
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        textarea#promptInput:focus {
+        .ai-container textarea#promptInput:focus {
             border-color: #2980b9;
             box-shadow: 0 0 8px rgba(41, 128, 185, 0.2);
             outline: none;
         }
 
-        button#submitButton {
+        .ai-container button#submitButton {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -99,36 +114,36 @@
             transition: background-image 0.4s ease, transform 0.2s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 12px rgba(41, 128, 185, 0.25);
         }
-        button#submitButton .fa-paper-plane {
+        .ai-container button#submitButton .fa-paper-plane {
             margin-right: 10px;
         }
 
-        button#submitButton:hover {
+        .ai-container button#submitButton:hover {
             background-image: linear-gradient(to right, #2980b9, #2471a3);
             transform: translateY(-3px);
             box-shadow: 0 6px 15px rgba(41, 128, 185, 0.35);
         }
-        button#submitButton:active {
+        .ai-container button#submitButton:active {
             transform: translateY(-1px);
             box-shadow: 0 3px 10px rgba(41, 128, 185, 0.3);
         }
-        button#submitButton:disabled {
+        .ai-container button#submitButton:disabled {
             background-image: linear-gradient(to right, #bdc3c7, #95a5a6);
             cursor: not-allowed;
             box-shadow: none;
             transform: translateY(0);
         }
-        button#submitButton:disabled .fa-spinner {
+        .ai-container button#submitButton:disabled .fa-spinner {
              margin-right: 10px;
         }
 
-        #responseContainer {
+        .ai-container #responseContainer {
             margin-top: 40px;
             border-top: 1px solid #e0e6ed;
             padding-top: 30px;
         }
 
-        #responseContainer h2 {
+        .ai-container #responseContainer h2 {
             color: #2c3e50;
             font-weight: 600;
             font-size: 1.7em;
@@ -136,42 +151,42 @@
             display: flex;
             align-items: center;
         }
-        #responseContainer h2 .fa-comments {
+        .ai-container #responseContainer h2 .fa-comments {
             margin-right: 10px;
             color: #16a085;
         }
 
-        #response {
+        .ai-container #response {
             padding: 20px;
             border: 1px solid #e0e6ed;
             background-color: #f8f9fc;
             border-radius: 10px;
-            white-space: pre-wrap; /* Penting untuk mempertahankan line break dari AI */
-            word-wrap: break-word; /* Memastikan kata panjang tidak merusak layout */
+            white-space: pre-wrap;
+            word-wrap: break-word;
             min-height: 80px;
             font-size: 16px;
             line-height: 1.7;
             color: #495057;
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
-        #response strong, #response b { /* Styling untuk teks tebal */
-            font-weight: 600; /* Atau bisa juga 700 atau 'bold' */
-            color: #2c3e50; /* Warna sedikit berbeda untuk penekanan */
+        .ai-container #response strong, .ai-container #response b {
+            font-weight: 600;
+            color: #2c3e50;
         }
-        #response ol, #response ul { /* Styling untuk daftar */
-            padding-left: 25px; /* Indentasi untuk daftar */
+        .ai-container #response ol, .ai-container #response ul {
+            padding-left: 25px;
             margin-top: 10px;
             margin-bottom: 10px;
         }
-        #response li {
-            margin-bottom: 5px; /* Jarak antar item daftar */
+        .ai-container #response li {
+            margin-bottom: 5px;
         }
 
-        #response.placeholder-text {
+        .ai-container #response.placeholder-text {
             color: #6c757d;
         }
 
-        .status-message {
+        .ai-container .status-message {
             padding: 18px 22px;
             border-radius: 10px;
             font-weight: 500;
@@ -179,50 +194,50 @@
             display: flex;
             align-items: center;
         }
-        .status-message i {
+        .ai-container .status-message i {
             margin-right: 12px;
             font-size: 1.2em;
         }
 
-        .loading {
+        .ai-container .loading {
             color: #2980b9;
             background-color: #eaf2f8;
             border-left: 5px solid #2980b9;
         }
-         /* Ikon loading tidak lagi menggunakan ::before karena akan dihandle oleh JS */
 
-        .error {
+        .ai-container .error {
             color: #c0392b;
             background-color: #fdedec;
             border-left: 5px solid #c0392b;
         }
-        /* Ikon error tidak lagi menggunakan ::before karena akan dihandle oleh JS */
 
         @media (max-width: 768px) {
-            .container { padding: 25px 30px; margin-top: 20px; margin-bottom: 20px; }
-            h1 { font-size: 2em; }
-            .subtitle { font-size: 1em; margin-bottom: 25px; }
-            textarea#promptInput { min-height: 120px; padding: 15px; font-size: 15px;}
-            button#submitButton { padding: 14px 18px; font-size: 16px; }
-            #responseContainer h2 { font-size: 1.5em; }
-            #response { padding: 18px; font-size: 15px; }
+            .ai-container { padding: 25px 30px; margin-top: 20px; margin-bottom: 20px; }
+            .ai-container h1 { font-size: 2em; }
+            .ai-container .subtitle { font-size: 1em; margin-bottom: 25px; }
+            .ai-container textarea#promptInput { min-height: 120px; padding: 15px; font-size: 15px;}
+            .ai-container button#submitButton { padding: 14px 18px; font-size: 16px; }
+            .ai-container #responseContainer h2 { font-size: 1.5em; }
+            .ai-container #response { padding: 18px; font-size: 15px; }
         }
         @media (max-width: 480px) {
-            body { padding: 10px; }
-            .container { padding: 20px 25px; }
-            h1 { font-size: 1.7em; }
-             h1 .fa-book-reader { margin-right: 8px; }
-            .subtitle { font-size: 0.95em; margin-bottom: 20px; }
-            textarea#promptInput { min-height: 100px; padding: 12px; font-size: 14px;}
-            button#submitButton { padding: 12px 15px; font-size: 15px; }
-            #responseContainer h2 { font-size: 1.3em; }
-            #responseContainer h2 .fa-comments { margin-right: 8px; }
-            #response { padding: 15px; font-size: 14px; }
-            .status-message { padding: 15px 18px; }
+            /* body { padding: 10px; } // Mungkin tidak perlu jika header/footer menangani padding */
+            .ai-container { padding: 20px 25px; }
+            .ai-container h1 { font-size: 1.7em; }
+            .ai-container h1 .fa-book-reader { margin-right: 8px; }
+            .ai-container .subtitle { font-size: 0.95em; margin-bottom: 20px; }
+            .ai-container textarea#promptInput { min-height: 100px; padding: 12px; font-size: 14px;}
+            .ai-container button#submitButton { padding: 12px 15px; font-size: 15px; }
+            .ai-container #responseContainer h2 { font-size: 1.3em; }
+            .ai-container #responseContainer h2 .fa-comments { margin-right: 8px; }
+            .ai-container #response { padding: 15px; font-size: 14px; }
+            .ai-container .status-message { padding: 15px 18px; }
         }
     </style>
-</head><body>
-    <div class="container">
+</head>
+<body> 
+    <?php // Main content area - Anda mungkin punya div pembungkus utama dari layout ?>
+    <div class="ai-container">
         <h1><i class="fas fa-book-reader"></i>Tera AI</h1>
         <p class="subtitle">Selamat datang di LibTera AI! Ajukan pertanyaan Anda seputar dunia literasi, materi pembelajaran, atau topik umum lainnya.</p>
         
@@ -249,42 +264,20 @@
             }
         });
 
-        // Fungsi untuk mengubah Markdown sederhana menjadi HTML
         function simpleMarkdownToHtml(mdText) {
             let htmlText = mdText;
-
-            // Ubah baris baru menjadi <br> (penting untuk mempertahankan format paragraf dari AI)
-            // Lakukan ini terlebih dahulu agar tidak mengganggu parsing Markdown lainnya
             htmlText = htmlText.replace(/\n/g, '<br>');
-
-            // Konversi **teks** atau __teks__ menjadi <strong>teks</strong> (Bold)
             htmlText = htmlText.replace(/\*\*(.*?)\*\*|__(.*?)__/g, '<strong>$1$2</strong>');
-
-            // Konversi *teks* atau _teks_ menjadi <em>teks</em> (Italic) - Opsional
-            // htmlText = htmlText.replace(/\*(.*?)\*|_(.*?)_/g, '<em>$1$2</em>');
-
-            // Konversi daftar bernomor sederhana (misal: 1. item)
-            // Ini adalah parser yang sangat sederhana dan mungkin perlu disempurnakan
-            // untuk kasus yang lebih kompleks atau daftar bersarang.
-            // Regex ini mencari pola seperti "digit. spasi teks <br>"
             htmlText = htmlText.replace(/^(\d+)\.\s+(.*?)(\<br\>|$)/gm, '<li>$2</li>');
-            // Jika ada item list, bungkus dengan <ol>
             if (/<li>(.*?)<\/li>/.test(htmlText)) {
-                 // Cek apakah sudah ada <ol> atau <ul> untuk menghindari duplikasi
                 if (!htmlText.startsWith('<ol>') && !htmlText.startsWith('<ul>')) {
-                    // Membungkus semua blok li yang berurutan
                     htmlText = htmlText.replace(/(<li>.*?<\/li>(\s*<br\s*\/?>\s*<li>.*?<\/li>)*)/g, '<ol>$1</ol>');
-                    // Membersihkan <br> yang mungkin ada di antara <li> dalam satu <ol>
                     htmlText = htmlText.replace(/<\/li>\s*<br\s*\/?>\s*<li>/g, '</li><li>');
                 }
             }
-             // Membersihkan <br> di akhir item list terakhir dalam <ol>
             htmlText = htmlText.replace(/<\/li><br>($|<\/ol>)/g, '</li>$1');
-
-
             return htmlText;
         }
-
 
         async function kirimPertanyaan() {
             const promptText = promptInput.value;
@@ -303,9 +296,9 @@
             responseDiv.className = 'status-message loading';
             responseDiv.classList.remove('placeholder-text');
 
-
             try {
                 // Pastikan URL ini sesuai dengan lokasi file gemini_api.php Anda
+                // Jika tanya_ai.php dan gemini_api.php ada di folder yang sama:
                 const response = await fetch('gemini_api.php', { 
                     method: 'POST',
                     headers: {
@@ -322,8 +315,6 @@
                 }
 
                 if (data.response) {
-                    // --- PERUBAHAN DI SINI ---
-                    // Gunakan fungsi simpleMarkdownToHtml dan innerHTML
                     responseDiv.innerHTML = simpleMarkdownToHtml(data.response);
                     responseDiv.className = ''; 
                 } else if (data.error) {

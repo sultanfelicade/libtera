@@ -1,12 +1,14 @@
 <?php
 // Ambil session role jika belum ada
+// Pastikan session sudah dimulai sebelumnya dengan session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start(); // Mulai session jika belum aktif
+}
 $role = $_SESSION["role"] ?? 'siswa';
 
 // Fungsi sederhana untuk menentukan apakah link aktif
 // Sesuaikan logika ini jika struktur URL Anda berbeda
 if (!function_exists('isNavLinkActive')) {
-    // Fungsi sederhana untuk menentukan apakah link aktif
-    // Sesuaikan logika ini jika struktur URL Anda berbeda
     function isNavLinkActive($href) {
         $currentPath = strtok($_SERVER["REQUEST_URI"], '?');
         // Menghapus trailing slash jika ada dari $currentPath dan $href untuk perbandingan yang lebih konsisten
@@ -27,11 +29,12 @@ if (!function_exists('isNavLinkActive')) {
             ["href" => "/libtera/Dashboard/siswa/index.php", "icon" => "fa-solid fa-book", "text" => "Buku"],
             ["href" => "/libtera/Dashboard/siswa/ebooks/ebook.php", "icon" => "fa-solid fa-book-open", "text" => "Ebook"],
             ["href" => "/libtera/Dashboard/Siswa/formPeminjaman/Transaksipeminjaman.php", "icon" => "fas fa-handshake", "text" => "Peminjaman"],
-            ["href" => "/libtera/Dashboard/Siswa/formPeminjaman/denda.php", "icon" => "fa-solid fa-money-bill-1-wave", "text" => "Denda"]
+            ["href" => "/libtera/Dashboard/Siswa/formPeminjaman/denda.php", "icon" => "fa-solid fa-money-bill-1-wave", "text" => "Denda"],
+            ["href" => "/libtera/Dashboard/Siswa/ebooks/tanya_ai.php", "icon" => "fas fa-robot", "text" => "Tera AI"]
         ];
         foreach ($menuSiswa as $item): ?>
             <li class="nav-item <?php echo isNavLinkActive($item['href']) ? 'active' : ''; ?>">
-                <a class="nav-link" href="<?php echo $item['href']; ?>">
+                <a class="nav-link" href="<?php echo $item['href']; ?>" <?php echo isset($item['target']) ? 'target="' . $item['target'] . '"' : ''; ?>>
                     <i class="<?php echo $item['icon']; ?> fa-fw me-2 nav-icon"></i>
                     <span class="nav-text"><?php echo $item['text']; ?></span>
                 </a>
@@ -47,10 +50,11 @@ if (!function_exists('isNavLinkActive')) {
             ["href" => "/libtera/Dashboard/Admin/formPeminjaman/peminjaman.php", "icon" => "fas fa-handshake", "text" => "Peminjaman"],
             ["href" => "/libtera/Dashboard/Admin/formPeminjaman/kelola_denda.php", "icon" => "fa-solid fa-money-bill-1-wave", "text" => "Kelola Denda"],
             ["href" => "/libtera/Dashboard/Admin/kelola_user.php", "icon" => "fa-solid fa-users", "text" => "Kelola Siswa"]
+            // Jika admin juga punya link AI yang perlu target blank, tambahkan 'target' => '_blank' di sini
         ];
         foreach ($menuAdmin as $item): ?>
             <li class="nav-item <?php echo isNavLinkActive($item['href']) ? 'active' : ''; ?>">
-                <a class="nav-link" href="<?php echo $item['href']; ?>">
+                <a class="nav-link" href="<?php echo $item['href']; ?>" <?php echo isset($item['target']) ? 'target="' . $item['target'] . '"' : ''; ?>>
                     <i class="<?php echo $item['icon']; ?> fa-fw me-2 nav-icon"></i>
                     <span class="nav-text"><?php echo $item['text']; ?></span>
                 </a>
@@ -76,8 +80,7 @@ if (!function_exists('isNavLinkActive')) {
             </div>
         </div>
     </div>
-    <a class="btn btn-primary w-100" href="/libtera/editprofil.php">Edit Profil</a>
-    <a class="btn btn-danger btn-sm sign-out-btn w-100" href="/libtera/logout.php">
+    <a class="btn btn-primary w-100 mb-2" href="/libtera/editprofil.php">Edit Profil</a> <a class="btn btn-danger btn-sm sign-out-btn w-100" href="/libtera/logout.php">
         Sign Out <i class="fa-solid fa-right-from-bracket ms-1"></i>
     </a>
 </div>

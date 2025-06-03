@@ -70,7 +70,7 @@ if ($pathToHeader && file_exists($pathToHeader)) {
     <div class="d-flex justify-content-between align-items-center my-3 pt-3 pt-md-0">
         <h1 class="h4 mb-0 text-truncate" title="<?= htmlspecialchars($title) ?>"><?= htmlspecialchars($title) ?></h1>
         <div>
-            <a href="tanya_ai.html" target="_blank" class="btn btn-primary me-2">
+            <a href="tanya_ai.php" target="_blank" class="btn btn-primary me-2">
                 <i class="fas fa-robot me-1"></i> Tanya AI
             </a>
             <a href="ebook.php" class="btn btn-outline-secondary">

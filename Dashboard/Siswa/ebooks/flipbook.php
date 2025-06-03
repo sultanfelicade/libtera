@@ -1,149 +1,78 @@
 <?php
-// flipbook.php (Viewer E-Book dengan layout standar)
+// flipbook.php (Viewer E-Book dengan layout standar - TANPA MODAL AI INTERNAL)
 
-// Bagian untuk menangani permintaan API Gemini (dipindahkan dari gemini_api.php)
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'ask_ai') {
-    // 1. Mengatur header respons dan CORS (Cross-Origin Resource Sharing)
-    header('Content-Type: application/json');
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type');
+// AKTIFKAN ERROR REPORTING UNTUK DEBUGGING (HAPUS/NONAKTIFKAN DI PRODUKSI)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-    if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-        exit;
-    }
-
-    // 2. Ambil Kunci API dari Environment Variable yang sudah di-set di .htaccess
-    $apiKey = getenv('GEMINI_API_KEY');
-
-    if (empty($apiKey)) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Kunci API tidak dikonfigurasi dengan benar di server. Periksa file .htaccess dan pastikan Apache sudah direstart.']);
-        exit;
-    }
-
-    // 3. Tentukan URL Endpoint API Gemini
-    $geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' . $apiKey;
-
-    // 4. Ambil data 'prompt' yang dikirim dari frontend
-    $inputJSON = file_get_contents('php://input');
-    $input = json_decode($inputJSON, TRUE);
-
-    if (!isset($input['prompt']) || empty(trim($input['prompt']))) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Prompt tidak boleh kosong.']);
-        exit;
-    }
-    $userPrompt = trim($input['prompt']);
-
-    // 5. Siapkan data yang akan dikirim ke API Gemini
-    $requestData = [
-        'contents' => [
-            [
-                'parts' => [
-                    ['text' => $userPrompt]
-                ]
-            ]
-        ]
-    ];
-    $jsonData = json_encode($requestData);
-
-    // 6. Kirim permintaan ke API Gemini menggunakan cURL
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $geminiApiUrl);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-
-    $response = curl_exec($ch);
-    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlError = curl_error($ch);
-
-    curl_close($ch);
-
-    // 7. Tangani respons dari API Gemini
-    if ($curlError) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Kesalahan cURL: ' . $curlError]);
-        exit;
-    }
-
-    if ($httpcode !== 200) {
-        http_response_code($httpcode);
-        $errorResponse = json_decode($response, true);
-        $errorMessage = 'Gagal menghubungi API Gemini.';
-        if (isset($errorResponse['error']['message'])) {
-            $errorMessage .= ' Pesan: ' . $errorResponse['error']['message'];
-        }
-        echo json_encode(['error' => $errorMessage, 'details' => $errorResponse]);
-        exit;
-    }
-
-    $responseData = json_decode($response, true);
-
-    // 8. Ekstrak teks jawaban dari respons Gemini dan kirim kembali ke frontend
-    if (isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
-        echo json_encode(['response' => $responseData['candidates'][0]['content']['parts'][0]['text']]);
-    } elseif (isset($responseData['promptFeedback'])) {
-        error_log('Gemini API Feedback: ' . print_r($responseData['promptFeedback'], true));
-        http_response_code(400);
-        $blockReason = isset($responseData['promptFeedback']['blockReason']) ? $responseData['promptFeedback']['blockReason'] : 'Tidak diketahui';
-        $safetyRatings = isset($responseData['promptFeedback']['safetyRatings']) ? json_encode($responseData['promptFeedback']['safetyRatings']) : 'Tidak ada detail';
-        echo json_encode([
-            'error' => 'Permintaan diblokir oleh filter keamanan Gemini. Alasan: ' . $blockReason,
-            'details' => $safetyRatings
-        ]);
-    } else {
-        error_log('Struktur respons Gemini tidak sesuai: ' . $response);
-        http_response_code(500);
-        echo json_encode(['error' => 'Gagal memproses respons dari AI. Struktur tidak dikenal.']);
-    }
-    exit(); // Penting untuk menghentikan eksekusi agar bagian viewer tidak ikut terpanggil saat ada request AI
-}
+// Blok PHP untuk menangani permintaan API Gemini internal SUDAH DIHAPUS.
+// Logika API akan ditangani oleh gemini_api.php yang dipanggil dari halaman AI terpisah.
 
 session_start(); // Penting jika header.php atau logika lain memerlukannya
 
 // Mendapatkan nama file PDF dari query string dan membersihkannya
 $pdfFile = isset($_GET['file']) ? basename(urldecode($_GET['file'])) : '';
 
-// Set judul untuk header.php
-$title = "Baca: " . htmlspecialchars(str_replace(['_', '-'], ' ', pathinfo($pdfFile, PATHINFO_FILENAME))); // Judul lebih rapi
+// Set judul untuk header.php (akan digunakan di header.php jika $title di sana)
+$title = "Baca: " . htmlspecialchars(str_replace(['_', '-'], ' ', pathinfo($pdfFile, PATHINFO_FILENAME)));
 
-// --- PATH KONFIGURASI (Sama seperti sebelumnya) ---
+// --- PATH KONFIGURASI (SESUAIKAN DENGAN STRUKTUR FOLDER ANDA!) ---
 $baseWebUrlToPdfDir = '/libtera/uploads/ebook/assets/books/';
 $pdfUrlForDFLIP = $baseWebUrlToPdfDir . rawurlencode($pdfFile);
-$baseServerPathToPdfDir = __DIR__ . '/../../../uploads/ebook/assets/books/';
-$filePathOnServer = realpath($baseServerPathToPdfDir . $pdfFile);
-$dflipAssetsBaseUrl = '/libtera/uploads/ebook/assets/';
+
+// Path server absolut ke direktori PDF.
+// __DIR__ adalah direktori tempat file flipbook.php ini berada (misal: .../ebooks/)
+// Sesuaikan '../..' sesuai kedalaman flipbook.php dari root '/libtera/'
+// Contoh: jika flipbook.php di /libtera/Dashboard/Siswa/ebooks/, maka '../../../' akan ke /libtera/
+$baseServerPathToPdfDir = realpath(__DIR__ . '/../../../uploads/ebook/assets/books/'); // PERIKSA PATH INI!
+$filePathOnServer = $baseServerPathToPdfDir ? realpath($baseServerPathToPdfDir . DIRECTORY_SEPARATOR . $pdfFile) : false;
+
+$dflipAssetsBaseUrl = '/libtera/uploads/ebook/assets/'; // Path URL ke aset dflip
 // --- AKHIR PATH KONFIGURASI ---
 
-// Periksa apakah file ada dan valid (Sama seperti sebelumnya)
-if (empty($pdfFile) || !$filePathOnServer || strpos($filePathOnServer, realpath($baseServerPathToPdfDir)) !== 0) {
-    // Jika error, mungkin lebih baik redirect atau tampilkan pesan dalam layout standar
-    $_SESSION['error_message'] = "File E-Book tidak ditemukan atau tidak valid.";
-    // header("Location: ebook.php"); // Redirect kembali ke daftar ebook
-    // exit;
-    // Atau, jika ingin menampilkan pesan error di halaman ini dengan layout:
-    include_once __DIR__ . '/../../../layout/header.php';
-    echo '<div class="container mt-5"><div class="alert alert-danger"><h1>Error</h1><p>Maaf, E-Book yang Anda cari tidak dapat ditemukan atau tidak valid.</p><p><a href="ebook.php" class="btn btn-primary">Kembali ke Daftar E-Book</a></p></div></div>';
-    include_once __DIR__ . '/../../../layout/footer.php';
+
+// Periksa apakah file ada dan valid
+// Path ke header dan footer untuk halaman error (jika file PDF tidak ditemukan)
+$pathToHeaderForError = realpath(__DIR__ . '/../../../layout/header.php'); // PERIKSA PATH INI!
+$pathToFooterForError = realpath(__DIR__ . '/../../../layout/footer.php'); // PERIKSA PATH INI!
+
+if (empty($pdfFile) || !$filePathOnServer || !is_file($filePathOnServer) || strpos($filePathOnServer, $baseServerPathToPdfDir) !== 0) {
+    if($pathToHeaderForError && file_exists($pathToHeaderForError)) include_once $pathToHeaderForError;
+    else echo "Error: Header file not found for error page.";
+
+    echo '<div class="container mt-5"><div class="alert alert-danger"><h1>Error E-Book</h1><p>Maaf, E-Book "'.htmlspecialchars($pdfFile).'" tidak dapat ditemukan atau tidak valid.</p>';
+    if (!$baseServerPathToPdfDir) {
+        echo "<p>Debug: Path dasar server ke direktori PDF (\$baseServerPathToPdfDir) tidak valid.</p>";
+    } elseif (!$filePathOnServer || !is_file($filePathOnServer)) {
+        echo "<p>Debug: File PDF tidak ditemukan di server pada path: " . htmlspecialchars($baseServerPathToPdfDir . DIRECTORY_SEPARATOR . $pdfFile) . "</p>";
+    } elseif (strpos($filePathOnServer, $baseServerPathToPdfDir) !== 0) {
+        echo "<p>Debug: File berada di luar direktori yang diizinkan.</p>";
+    }
+    echo '<p><a href="ebook.php" class="btn btn-primary">Kembali ke Daftar E-Book</a></p></div></div>';
+    
+    if($pathToFooterForError && file_exists($pathToFooterForError)) include_once $pathToFooterForError;
+    else echo "</body></html>";
     exit;
 }
 
 // Sertakan header layout utama Anda
-// Path dari Dashboard/Siswa/ ke layout/header.php
-include_once __DIR__ . '/../../../layout/header.php';
+// Path dari Dashboard/Siswa/ebooks/ ke layout/header.php adalah '../../../layout/header.php'
+$pathToHeader = realpath(__DIR__ . '/../../../layout/header.php'); // PERIKSA PATH INI!
+if ($pathToHeader && file_exists($pathToHeader)) {
+    include_once $pathToHeader;
+} else {
+    die("ERROR Kritis: File header.php tidak ditemukan. Periksa path di flipbook.php. Path yang dicari: " . htmlspecialchars(__DIR__ . '/../../../layout/header.php'));
+}
 ?>
 
-<div class="container-fluid"> <?php /* Atau ganti dengan class "container" jika ingin ada batas samping */ ?>
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center my-3 pt-3 pt-md-0">
         <h1 class="h4 mb-0 text-truncate" title="<?= htmlspecialchars($title) ?>"><?= htmlspecialchars($title) ?></h1>
         <div>
-            <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#aiModal">
+            <a href="tanya_ai.html" target="_blank" class="btn btn-primary me-2">
                 <i class="fas fa-robot me-1"></i> Tanya AI
-            </button>
+            </a>
             <a href="ebook.php" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar E-Book
             </a>
@@ -157,52 +86,21 @@ include_once __DIR__ . '/../../../layout/header.php';
                     class="_df_book"
                     id="df_manual_book"
                     source="<?php echo htmlspecialchars($pdfUrlForDFLIP); ?>"
-                    height="100%" <?php /* Mengambil 100% dari tinggi parent (flipbook-viewer-wrapper) */ ?>
+                    height="100%"
                     webgl="true"
-                    backgroundcolor="#C0C0C0" <?php /* Warna latar flipbook, bisa beda dari page */ ?>
+                    backgroundcolor="#C0C0C0"
                 ></div>
-            </div>
-        </div>
-    </div>
-
-</div> <?php /* End container-fluid */ ?>
-
-<div class="modal fade" id="aiModal" tabindex="-1" aria-labelledby="aiModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="aiModalLabel"><i class="fas fa-robot me-2"></i>Fitur AI</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="aiPrompt" class="form-label">Ajukan pertanyaan terkait E-Book ini:</label>
-                    <textarea class="form-control" id="aiPrompt" rows="3" placeholder="Contoh: Jelaskan tentang bab ini"></textarea>
-                </div>
-                <div class="mb-3">
-                    <button id="askAiButton" class="btn btn-primary"><i class="fas fa-question-circle me-1"></i> Ajukan</button>
-                </div>
-                <div id="aiResponse" class="mt-3 border p-3 rounded bg-light" style="white-space: pre-wrap; overflow-y: auto; max-height: 300px;">
-                </div>
-                <div id="aiLoading" class="mt-2 text-center" style="display:none;">
-                    <div class="spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <span>Memproses...</span>
-                </div>
-                <div id="aiError" class="mt-2 text-danger" style="display:none;">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
 </div>
 
 <?php
-// Sertakan JavaScript yang dibutuhkan dFlip (setelah konten utama)
-// Path-path ini sudah absolut dari root web (/libtera/)
+// MODAL BOOTSTRAP SUDAH DIHAPUS
+?>
+
+<?php
+// Sertakan JavaScript yang dibutuhkan dFlip
 ?>
 <script src="<?php echo htmlspecialchars($dflipAssetsBaseUrl . 'js/libs/jquery.min.js'); ?>" type="text/javascript"></script>
 <script src="<?php echo htmlspecialchars($dflipAssetsBaseUrl . 'js/libs/three.min.js'); ?>" type="text/javascript"></script>
@@ -210,67 +108,22 @@ include_once __DIR__ . '/../../../layout/header.php';
 <script src="<?php echo htmlspecialchars($dflipAssetsBaseUrl . 'js/libs/mockup.min.js'); ?>" type="text/javascript"></script>
 
 <script type="text/javascript">
-    // PENTING: Atur path ke pdf.worker.min.js SEBELUM pdf.min.js dimuat.
     window.PDFJS_WORKER_SRC = '<?php echo htmlspecialchars($dflipAssetsBaseUrl . 'js/libs/pdf.worker.min.js'); ?>';
 </script>
 <script src="<?php echo htmlspecialchars($dflipAssetsBaseUrl . 'js/libs/pdf.min.js'); ?>" type="text/javascript"></script>
-
 <script src="<?php echo htmlspecialchars($dflipAssetsBaseUrl . 'js/dflip.min.js'); ?>" type="text/javascript"></script>
 
-<script>
-    $(document).ready(function() {
-        const aiModal = $('#aiModal');
-        const aiPromptInput = $('#aiPrompt');
-        const askAiButton = $('#askAiButton');
-        const aiResponseDiv = $('#aiResponse');
-        const aiLoadingDiv = $('#aiLoading');
-        const aiErrorDiv = $('#aiError');
-
-        askAiButton.on('click', function() {
-            const prompt = aiPromptInput.val();
-            if (prompt.trim() !== "") {
-                aiResponseDiv.empty();
-                aiLoadingDiv.show();
-                aiErrorDiv.hide();
-
-                // Kirim permintaan ke backend AI Anda (sekarang adalah file ini sendiri)
-                $.ajax({
-                    url: 'flopbook.php', // Mengarah ke file ini sendiri
-                    method: 'POST',
-                    dataType: 'json',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ prompt: prompt, action: 'ask_ai' }), // Tambahkan parameter action
-                    success: function(data) {
-                        aiLoadingDiv.hide();
-                        if (data.response) {
-                            aiResponseDiv.html(data.response);
-                        } else if (data.error) {
-                            aiErrorDiv.text('Error: ' + data.error).show();
-                        } else {
-                            aiErrorDiv.text('Error: Respon tidak valid dari server.').show();
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        aiLoadingDiv.hide();
-                        aiErrorDiv.text('Error: ' + error).show();
-                        console.error("Error fetching AI response:", error);
-                    }
-                });
-            } else {
-                alert('Silakan masukkan pertanyaan Anda.');
-            }
-        });
-
-        aiModal.on('hidden.bs.modal', function() {
-            aiPromptInput.val(''); // Kosongkan input saat modal ditutup
-            aiResponseDiv.empty(); // Kosongkan respon
-            aiErrorDiv.hide(); // Sembunyikan error
-        });
-    });
-</script>
+<?php
+// JAVASCRIPT UNTUK MODAL DAN AJAX AI SUDAH DIHAPUS DARI SINI
+// Logika AJAX akan ada di tanya_ai.html
+?>
 
 <?php
 // Sertakan footer layout utama Anda
-// Path dari Dashboard/Siswa/ ke layout/footer.php
-include_once __DIR__ . '/../../../layout/footer.php';
+$pathToFooter = realpath(__DIR__ . '/../../../layout/footer.php'); // PERIKSA PATH INI!
+if ($pathToFooter && file_exists($pathToFooter)) {
+    include_once $pathToFooter;
+} else {
+    die("ERROR Kritis: File footer.php tidak ditemukan. Periksa path di flipbook.php. Path yang dicari: " . htmlspecialchars(__DIR__ . '/../../../layout/footer.php'));
+}
 ?>

@@ -69,11 +69,11 @@ $sqlDataPending = "SELECT
                         p.id_peminjaman, p.id_buku, b.judul AS judul_buku,
                         p.id_siswa, s.nisn AS nisn_siswa, s.nama AS nama_siswa,
                         p.tgl_pinjam AS tgl_pengajuan_atau_pinjam, p.status
-                   FROM peminjaman p
-                   INNER JOIN buku b ON p.id_buku = b.id_buku
-                   INNER JOIN siswa s ON p.id_siswa = s.id_siswa 
-                   WHERE p.status = 'PENDING'
-                   ORDER BY p.id_peminjaman ASC";
+                    FROM peminjaman p
+                    INNER JOIN buku b ON p.id_buku = b.id_buku
+                    INNER JOIN siswa s ON p.id_siswa = s.id_siswa 
+                    WHERE p.status = 'PENDING'
+                    ORDER BY p.id_peminjaman ASC";
 $stmtDataPending = $connect->prepare($sqlDataPending);
 $dataPermintaanPeminjaman = [];
 if ($stmtDataPending && $stmtDataPending->execute()) {
@@ -98,7 +98,8 @@ if ($resultTotalDipinjam) {
 
 // --- Filter Riwayat berdasarkan Bulan, Tahun, dan Status ---
 $filter_bulan = isset($_GET['filter_bulan']) ? (int)$_GET['filter_bulan'] : 0; // Default 0 (Semua Bulan)
-$filter_tahun = isset($_GET['filter_tahun']) ? (int)$_GET['filter_tahun'] : 0; // Default 0 (Semua Tahun)
+// PERUBAHAN 1: Logika filter tahun tetap sama, karena (int) akan mengubah input kosong/teks menjadi 0, yang berarti 'Semua Tahun'.
+$filter_tahun = isset($_GET['filter_tahun']) && is_numeric($_GET['filter_tahun']) ? (int)$_GET['filter_tahun'] : 0; // Default 0 (Semua Tahun)
 $filter_status_riwayat = isset($_GET['filter_status_riwayat']) ? trim($_GET['filter_status_riwayat']) : ''; // Default '' (Semua Status Riwayat)
 $filter_applied = isset($_GET['apply_filter']);
 
@@ -161,9 +162,10 @@ $daftar_bulan = [
     1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
     7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
 ];
-// Daftar tahun untuk dropdown (misal 5 tahun ke belakang hingga tahun ini)
-$tahun_sekarang = date('Y');
-$daftar_tahun = range($tahun_sekarang, $tahun_sekarang - 5);
+// PERUBAHAN 2: Baris di bawah ini untuk membuat daftar tahun dropdown sudah tidak diperlukan lagi, jadi dihapus.
+// $tahun_sekarang = date('Y');
+// $daftar_tahun = range($tahun_sekarang, $tahun_sekarang - 5); 
+
 // Daftar status untuk filter riwayat
 $daftar_status_riwayat = ['PINJAM', 'KEMBALI', 'DITOLAK', 'DIBATALKAN'];
 
@@ -176,7 +178,6 @@ include_once __DIR__ . '/../../../layout/header.php';
         <h2 class="text-primary fw-bold"><i class="fas fa-user-shield me-2"></i>Admin: Peminjaman Buku</h2>
         <p class="text-muted">Validasi permintaan dan lihat riwayat peminjaman.</p>
     </div>
-
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card text-white bg-info shadow">
@@ -191,12 +192,10 @@ include_once __DIR__ . '/../../../layout/header.php';
                 </div>
             </div>
         </div>
-        </div>
-
+    </div>
 
     <?php
-    // Pesan notifikasi (sukses/error dari aksi POST, error load data, error auth)
-    // (Kode PHP untuk menampilkan pesan notifikasi tetap sama seperti sebelumnya)
+    // Bagian notifikasi pesan tetap sama
     if ($pesan_sukses_validasi) {
         echo "<div class='alert alert-success alert-dismissible fade show' role='alert'>" . htmlspecialchars($pesan_sukses_validasi) . "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button></div>";
     }
@@ -292,15 +291,14 @@ include_once __DIR__ . '/../../../layout/header.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
+                
                 <div class="col-md-3">
                     <label for="filter_tahun" class="form-label">Tahun (Tgl. Pinjam):</label>
-                    <select name="filter_tahun" id="filter_tahun" class="form-select form-select-sm">
-                        <option value="0">Semua Tahun</option>
-                        <?php foreach ($daftar_tahun as $tahun): ?>
-                            <option value="<?= $tahun; ?>" <?= ($filter_applied && $filter_tahun == $tahun) ? 'selected' : ''; ?>><?= $tahun; ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="number" name="filter_tahun" id="filter_tahun" class="form-control form-control-sm" 
+                           placeholder="Contoh: 2024"
+                           value="<?= ($filter_applied && $filter_tahun > 0) ? htmlspecialchars($filter_tahun) : ''; ?>">
                 </div>
+
                 <div class="col-md-3">
                     <label for="filter_status_riwayat" class="form-label">Status Peminjaman:</label>
                     <select name="filter_status_riwayat" id="filter_status_riwayat" class="form-select form-select-sm">
@@ -320,11 +318,11 @@ include_once __DIR__ . '/../../../layout/header.php';
 
             <?php if (empty($dataRiwayatPeminjaman) && $filter_applied): ?>
                  <div class="alert alert-warning text-center">
-                    Tidak ada riwayat peminjaman yang cocok dengan filter
-                    <?= $filter_bulan > 0 ? "bulan " . $daftar_bulan[$filter_bulan] : ''; ?>
-                    <?= $filter_tahun > 0 ? "tahun " . $filter_tahun : ''; ?>
-                    <?= !empty($filter_status_riwayat) ? "status " . ucfirst(strtolower($filter_status_riwayat)) : ''; ?>.
-                </div>
+                     Tidak ada riwayat peminjaman yang cocok dengan filter
+                     <?= $filter_bulan > 0 ? "bulan " . $daftar_bulan[$filter_bulan] : ''; ?>
+                     <?= $filter_tahun > 0 ? "tahun " . $filter_tahun : ''; ?>
+                     <?= !empty($filter_status_riwayat) ? "status " . ucfirst(strtolower($filter_status_riwayat)) : ''; ?>.
+                 </div>
             <?php elseif (empty($dataRiwayatPeminjaman)): ?>
                 <div class="alert alert-secondary text-center">Belum ada riwayat peminjaman yang sudah diproses.</div>
             <?php else: ?>

@@ -635,3 +635,7 @@ body { padding-top: 56px; }
     background-color: rgba(255,255,255,0.3);
 } */
 
+/* Fix untuk navbar mobile (burger menu) agar selalu di atas */
+.navbar-mobile {
+    z-index: 1050; 
+}

@@ -9,6 +9,7 @@ if (!isset($_SESSION['admin']) || !isset($_SESSION['admin']['id'])) {
     header("Location: /libtera/login_admin.php"); 
     exit;
 }
+// Variabel ini tidak lagi digunakan dalam query, tapi bisa dipertahankan jika diperlukan untuk bagian lain
 $id_admin_logged_in = (int)$_SESSION['admin']['id'];
 // --- End Autentikasi Admin ---
 
@@ -24,15 +25,14 @@ if (isset($_SESSION['pesan_error_validasi'])) unset($_SESSION['pesan_error_valid
 
 // --- Proses Aksi Validasi (Setujui/Tolak) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // (Logika POST untuk setujui/tolak tetap sama seperti sebelumnya)
     $id_peminjaman_aksi = filter_input(INPUT_POST, 'id_peminjaman', FILTER_VALIDATE_INT);
 
     if ($id_peminjaman_aksi) {
         if (isset($_POST['setujui'])) {
-            $sql_approve = "UPDATE peminjaman SET status = 'PINJAM', id_admin = ?, tgl_pinjam = CURDATE() WHERE id_peminjaman = ? AND status = 'PENDING'";
+            $sql_approve = "UPDATE peminjaman SET status = 'PINJAM', tgl_pinjam = CURDATE() WHERE id_peminjaman = ? AND status = 'PENDING'";
             $stmt_action = $connect->prepare($sql_approve);
             if ($stmt_action) {
-                $stmt_action->bind_param("ii", $id_admin_logged_in, $id_peminjaman_aksi);
+                $stmt_action->bind_param("i", $id_peminjaman_aksi);
                 if ($stmt_action->execute() && $stmt_action->affected_rows > 0) {
                     $_SESSION['pesan_sukses_validasi'] = "Peminjaman ID " . htmlspecialchars($id_peminjaman_aksi) . " berhasil disetujui.";
                 } else {
@@ -43,10 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['pesan_error_validasi'] = "Gagal menyiapkan statement persetujuan: " . $connect->error;
             }
         } elseif (isset($_POST['tolak'])) {
-            $sql_reject = "UPDATE peminjaman SET status = 'DITOLAK', id_admin = ? WHERE id_peminjaman = ? AND status = 'PENDING'";
+            $sql_reject = "UPDATE peminjaman SET status = 'DITOLAK' WHERE id_peminjaman = ? AND status = 'PENDING'";
             $stmt_action = $connect->prepare($sql_reject);
             if ($stmt_action) {
-                $stmt_action->bind_param("ii", $id_admin_logged_in, $id_peminjaman_aksi);
+                $stmt_action->bind_param("i", $id_peminjaman_aksi);
                 if ($stmt_action->execute() && $stmt_action->affected_rows > 0) {
                     $_SESSION['pesan_sukses_validasi'] = "Peminjaman ID " . htmlspecialchars($id_peminjaman_aksi) . " berhasil ditolak.";
                 } else {
@@ -97,10 +97,9 @@ if ($resultTotalDipinjam) {
 
 
 // --- Filter Riwayat berdasarkan Bulan, Tahun, dan Status ---
-$filter_bulan = isset($_GET['filter_bulan']) ? (int)$_GET['filter_bulan'] : 0; // Default 0 (Semua Bulan)
-// PERUBAHAN 1: Logika filter tahun tetap sama, karena (int) akan mengubah input kosong/teks menjadi 0, yang berarti 'Semua Tahun'.
-$filter_tahun = isset($_GET['filter_tahun']) && is_numeric($_GET['filter_tahun']) ? (int)$_GET['filter_tahun'] : 0; // Default 0 (Semua Tahun)
-$filter_status_riwayat = isset($_GET['filter_status_riwayat']) ? trim($_GET['filter_status_riwayat']) : ''; // Default '' (Semua Status Riwayat)
+$filter_bulan = isset($_GET['filter_bulan']) ? (int)$_GET['filter_bulan'] : 0;
+$filter_tahun = isset($_GET['filter_tahun']) && is_numeric($_GET['filter_tahun']) ? (int)$_GET['filter_tahun'] : 0;
+$filter_status_riwayat = isset($_GET['filter_status_riwayat']) ? trim($_GET['filter_status_riwayat']) : '';
 $filter_applied = isset($_GET['apply_filter']);
 
 // --- Ambil Data Riwayat Peminjaman (Status BUKAN 'PENDING') ---
@@ -162,9 +161,6 @@ $daftar_bulan = [
     1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
     7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
 ];
-// PERUBAHAN 2: Baris di bawah ini untuk membuat daftar tahun dropdown sudah tidak diperlukan lagi, jadi dihapus.
-// $tahun_sekarang = date('Y');
-// $daftar_tahun = range($tahun_sekarang, $tahun_sekarang - 5); 
 
 // Daftar status untuk filter riwayat
 $daftar_status_riwayat = ['PINJAM', 'KEMBALI', 'DITOLAK', 'DIBATALKAN'];
@@ -195,7 +191,6 @@ include_once __DIR__ . '/../../../layout/header.php';
     </div>
 
     <?php
-    // Bagian notifikasi pesan tetap sama
     if ($pesan_sukses_validasi) {
         echo "<div class='alert alert-success alert-dismissible fade show' role='alert'>" . htmlspecialchars($pesan_sukses_validasi) . "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button></div>";
     }
@@ -254,13 +249,13 @@ include_once __DIR__ . '/../../../layout/header.php';
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>?<?= http_build_query($_GET) // Pertahankan filter GET saat POST ?>" class="d-inline-block me-1 mb-1">
+                                        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>?<?= http_build_query($_GET) ?>" class="d-inline-block me-1 mb-1">
                                             <input type="hidden" name="id_peminjaman" value="<?= $item["id_peminjaman"]; ?>">
                                             <button type="submit" name="setujui" class="btn btn-success btn-sm" title="Setujui Peminjaman" onclick="return confirm('Setujui peminjaman buku \'<?= htmlspecialchars(addslashes($item['judul_buku'])) ?>\' oleh <?= htmlspecialchars(addslashes($item['nama_siswa'])) ?>?')">
                                                 <i class="fas fa-check me-1"></i> Setujui
                                             </button>
                                         </form>
-                                        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>?<?= http_build_query($_GET) // Pertahankan filter GET saat POST ?>" class="d-inline-block mb-1">
+                                        <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>?<?= http_build_query($_GET) ?>" class="d-inline-block mb-1">
                                             <input type="hidden" name="id_peminjaman" value="<?= $item["id_peminjaman"]; ?>">
                                             <button type="submit" name="tolak" class="btn btn-danger btn-sm" title="Tolak Peminjaman" onclick="return confirm('Tolak peminjaman buku \'<?= htmlspecialchars(addslashes($item['judul_buku'])) ?>\' oleh <?= htmlspecialchars(addslashes($item['nama_siswa'])) ?>?')">
                                                 <i class="fas fa-times me-1"></i> Tolak
@@ -312,16 +307,16 @@ include_once __DIR__ . '/../../../layout/header.php';
                     <button type="submit" name="apply_filter" class="btn btn-primary btn-sm w-100"><i class="fas fa-filter me-1"></i> Terapkan</button>
                 </div>
                 <div class="col-md-auto">
-                     <a href="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="btn btn-outline-secondary btn-sm w-100"><i class="fas fa-undo me-1"></i> Reset</a>
+                    <a href="<?= htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="btn btn-outline-secondary btn-sm w-100"><i class="fas fa-undo me-1"></i> Reset</a>
                 </div>
             </form>
 
             <?php if (empty($dataRiwayatPeminjaman) && $filter_applied): ?>
                  <div class="alert alert-warning text-center">
-                     Tidak ada riwayat peminjaman yang cocok dengan filter
-                     <?= $filter_bulan > 0 ? "bulan " . $daftar_bulan[$filter_bulan] : ''; ?>
-                     <?= $filter_tahun > 0 ? "tahun " . $filter_tahun : ''; ?>
-                     <?= !empty($filter_status_riwayat) ? "status " . ucfirst(strtolower($filter_status_riwayat)) : ''; ?>.
+                      Tidak ada riwayat peminjaman yang cocok dengan filter
+                      <?= $filter_bulan > 0 ? "bulan " . $daftar_bulan[$filter_bulan] : ''; ?>
+                      <?= $filter_tahun > 0 ? "tahun " . $filter_tahun : ''; ?>
+                      <?= !empty($filter_status_riwayat) ? "status " . ucfirst(strtolower($filter_status_riwayat)) : ''; ?>.
                  </div>
             <?php elseif (empty($dataRiwayatPeminjaman)): ?>
                 <div class="alert alert-secondary text-center">Belum ada riwayat peminjaman yang sudah diproses.</div>

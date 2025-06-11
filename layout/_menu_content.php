@@ -26,8 +26,8 @@ if (!function_exists('isNavLinkActive')) {
     <?php if ($role === 'siswa'): ?>
         <?php
         $menuSiswa = [
-            ["href" => "/libtera/Dashboard/siswa/index.php", "icon" => "fa-solid fa-book", "text" => "Buku"],
-            ["href" => "/libtera/Dashboard/siswa/ebooks/ebook.php", "icon" => "fa-solid fa-book-open", "text" => "Ebook"],
+            ["href" => "/libtera/Dashboard/siswa/index.php", "icon" => "fa-solid fa-book", "text" => "Pinjam Buku"],
+            ["href" => "/libtera/Dashboard/siswa/ebooks/ebook.php", "icon" => "fa-solid fa-book-open", "text" => "Baca E-book"],
             ["href" => "/libtera/Dashboard/Siswa/formPeminjaman/Transaksipeminjaman.php", "icon" => "fas fa-handshake", "text" => "Peminjaman"],
             ["href" => "/libtera/Dashboard/Siswa/formPeminjaman/denda.php", "icon" => "fa-solid fa-money-bill-1-wave", "text" => "Denda"],
             ["href" => "/libtera/Dashboard/Siswa/ebooks/tanya_ai.php", "icon" => "fas fa-robot", "text" => "Tera AI"]

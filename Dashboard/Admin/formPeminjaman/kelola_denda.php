@@ -639,7 +639,7 @@ include_once __DIR__ . '/../../../layout/header.php';
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="jumlah_denda_dikenakan_catat_modal_input" class="form-label">Jumlah Denda Dikenakan (Rp) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="jumlah_denda_dikenakan_catat_modal_input" name="jumlah_denda_dikenakan_catat_modal" readonly>
+                            <input type="text" class="form-control" id="jumlah_denda_dikenakan_catat_modal_input" name="jumlah_denda_dikenakan_catat_modal">
                             <small class="form-text text-muted">Otomatis dari estimasi keterlambatan. Tidak bisa diubah.</small>
                         </div>
                         <div class="col-md-4 mb-3">

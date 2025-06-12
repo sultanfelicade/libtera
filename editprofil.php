@@ -26,7 +26,8 @@ $data = $result->fetch_assoc();
 // Handle POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
-    $password = $_POST['password'];
+    $passwordBaru = $_POST['password'];
+    $passwordLama = $_POST['old_password'];
 
     // Validasi username
     if (strlen($username) < 4) {
@@ -35,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Cek apakah username sudah digunakan oleh orang lain
+    // Cek apakah username sudah digunakan oleh pengguna lain
     $cekUsername = $connect->prepare("SELECT id_siswa FROM siswa WHERE username = ? AND id_siswa != ?");
     $cekUsername->bind_param("si", $username, $id_siswa);
     $cekUsername->execute();
@@ -47,30 +48,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Update
-    if (!empty($password)) {
-        if (strlen($password) < 6) {
-            $_SESSION['error'] = "Password minimal 6 karakter.";
+    // Ambil password lama dari database
+    $ambil = $connect->prepare("SELECT password FROM siswa WHERE id_siswa = ?");
+    $ambil->bind_param("i", $id_siswa);
+    $ambil->execute();
+    $ambil->bind_result($passwordLamaHash);
+    $ambil->fetch();
+    $ambil->close();
+
+    // Proses update
+    if (!empty($passwordBaru)) {
+        // Wajib isi password lama
+        if (empty($passwordLama)) {
+            $_SESSION['error'] = "Masukkan password lama untuk mengubah password.";
             header("Location: editprofil.php");
             exit();
         }
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        // Verifikasi password lama
+        if (!password_verify($passwordLama, $passwordLamaHash)) {
+            $_SESSION['error'] = "Password lama salah.";
+            header("Location: editprofil.php");
+            exit();
+        }
+
+        // Validasi password baru
+        if (strlen($passwordBaru) < 6) {
+            $_SESSION['error'] = "Password baru minimal 6 karakter.";
+            header("Location: editprofil.php");
+            exit();
+        }
+
+        $passwordHashBaru = password_hash($passwordBaru, PASSWORD_DEFAULT);
         $update = $connect->prepare("UPDATE siswa SET username = ?, password = ? WHERE id_siswa = ?");
-        $update->bind_param("ssi", $username, $password_hash, $id_siswa);
+        $update->bind_param("ssi", $username, $passwordHashBaru, $id_siswa);
     } else {
+        // Hanya ubah username
         $update = $connect->prepare("UPDATE siswa SET username = ? WHERE id_siswa = ?");
         $update->bind_param("si", $username, $id_siswa);
     }
 
+    // Eksekusi
     if ($update->execute()) {
         $_SESSION['success'] = "Profil berhasil diperbarui!";
-        header("Location: editprofil.php");
-        exit();
     } else {
         $_SESSION['error'] = "Gagal memperbarui profil.";
-        header("Location: editprofil.php");
-        exit();
     }
+
+    header("Location: editprofil.php");
+    exit();
 }
 ?>
 
@@ -104,6 +130,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="mb-3">
         <label for="username" class="form-label">Username Baru</label>
         <input type="text" name="username" id="username" class="form-control" required value="<?= htmlspecialchars($data['username'] ?? '', ENT_QUOTES) ?>">
+      </div>
+
+      <div class="mb-3">
+        <label for="old_password" class="form-label">Password Lama</label>
+        <input type="password" name="old_password" id="old_password" class="form-control" placeholder="Isi jika ingin ubah password">
       </div>
 
       <div class="mb-3">

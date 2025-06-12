@@ -53,7 +53,7 @@
 
 <!-- Tombol HALAMAN DEPAN di luar card -->
 <div class="text-center mt-3">
-  <a href="index.html" class="btn btn-outline-secondary btn-sm">HALAMAN DEPAN</a>
+  <a href="index.html" class="btn btn-outline-primary btn-sm">HALAMAN DEPAN</a>
 </div>
 <!-- Tambahan: tombol kembali ke dashboard -->
 <script>

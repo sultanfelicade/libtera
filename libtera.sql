@@ -168,9 +168,10 @@ CREATE TABLE `jurusan` (
 --
 
 INSERT INTO `jurusan` (`id_jurusan`, `nama_jurusan`) VALUES
-(1, 'RPL'),
-(3, 'TITL'),
-(2, 'TKJ');
+(1, 'Rpl'),
+(3, 'Akl'),
+(2, 'Tkj'),
+(4, 'Otkp');
 
 -- --------------------------------------------------------
 

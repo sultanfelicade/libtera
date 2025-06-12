@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 6.0.0-dev+20241213.325760150e
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jun 10, 2025 at 10:19 AM
+-- Generation Time: Jun 12, 2025 at 06:20 PM
 -- Server version: 8.0.30
--- PHP Version: 8.4.1
+-- PHP Version: 8.1.10
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -52,7 +52,7 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`id`, `nama_admin`, `username`, `password`, `no_tlp`, `tgl_daftar`) VALUES
-(1, 'Aziz', 'aziz', 'pass123', '081234567890', '2025-05-20 22:56:06');
+(1, 'Aziz', 'aziz', '$2y$10$48Mp.RmLLCoTKFa.jBGfwexseyrEuyPuhM3o8BQjysoIth7rjFeAa', '081234567890', '2025-05-20 22:56:06');
 
 -- --------------------------------------------------------
 
@@ -84,7 +84,7 @@ INSERT INTO `buku` (`id_buku`, `cover`, `judul`, `pengarang`, `penerbit`, `tahun
 ('2', '1748784962_71-vKSCi5zL._AC_UF1000,1000_QL80_.jpg', 'The Origin of Species by Means of Natural Selection', 'Charles Darwin', 'Gramedia', '2018', 400, 'The Origin of Species by Means of Natural Selection adalah karya revolusioner Charles Darwin yang memperkenalkan teori evolusi melalui seleksi alam. Dalam buku ini, Darwin menjelaskan bagaimana spesies makhluk hidup berubah dan berkembang seiring waktu sebagai hasil dari proses alamiah yang ia sebut sebagai \"seleksi alam\" — yaitu bertahannya individu-individu yang paling sesuai dengan lingkungannya.', 9, 3, '8754'),
 ('4', '1748779492_61CqQMY7mxS.jpg', 'Autobiography of Benjamin Franklinn', 'Benjamin Franklin', 'Guttenburg', '2006', 320, 'The Autobiography of Benjamin Franklin adalah catatan kehidupan salah satu tokoh paling berpengaruh dalam sejarah Amerika. Ditulis langsung oleh Benjamin Franklin, buku ini menggambarkan perjalanan hidupnya dari seorang anak tukang sablon menjadi ilmuwan, penemu, diplomat, dan tokoh negarawan terkemuka.', 4, 4, '2675'),
 ('5', '1748757262_william-shakespeare-romeo-dan-juliet-2018.jpg', 'Romeo and Juliet', 'William Shakespeare', 'Bentang', '2017', 280, 'Romeo and Juliet adalah kisah cinta tragis antara dua remaja dari keluarga yang saling bermusuhan: Romeo dari keluarga Montague dan Juliet dari keluarga Capulet. Meskipun hubungan mereka dilarang, keduanya jatuh cinta dan diam-diam menikah. Namun, serangkaian kesalahpahaman dan konflik berdarah menyebabkan tragedi: Romeo membunuh sepupu Juliet, Tybalt, lalu diasingkan. Juliet dipaksa menikah dengan pria lain dan merencanakan pelarian dengan meminum ramuan tidur palsu.', 8, 1, '18481'),
-('6', '1748778987_4057664594303.jfif', 'An Introduction to Machine Drawing and Designn', 'David Allan Low', 'Guttenburg', '2012', 300, 'An Introduction to Machine Drawing and Design adalah buku teknis klasik yang dirancang untuk memberikan pemahaman dasar mengenai cara menggambar dan merancang mesin secara mekanis. Buku ini membahas prinsip-prinsip utama dalam gambar teknik, proyeksi ortogonal, toleransi, serta simbol-simbol yang digunakan dalam perancangan komponen mesin.', 12, 5, '7615'),
+('6', '1748778987_4057664594303.jfif', 'An Introduction to Machine Drawing and Design', 'David Allan Low', 'Guttenburg', '2012', 300, 'An Introduction to Machine Drawing and Design adalah buku teknis klasik yang dirancang untuk memberikan pemahaman dasar mengenai cara menggambar dan merancang mesin secara mekanis. Buku ini membahas prinsip-prinsip utama dalam gambar teknik, proyeksi ortogonal, toleransi, serta simbol-simbol yang digunakan dalam perancangan komponen mesin.', 12, 5, '7615'),
 ('7', '1748757118_91xNmlf86yL.jpg', 'Moby Dick', 'Herman Melville', 'Gramedia', '2016', 360, 'Ishmael, seorang pemuda yang ingin merasakan kehidupan sebagai pelaut, bergabung dengan kapal penangkap paus Pequod. Kapal tersebut dipimpin oleh Kapten Ahab, seorang pria misterius yang ternyata menyimpan dendam mendalam terhadap seekor paus putih raksasa bernama Moby Dick—makhluk yang telah merenggut kakinya di masa lalu.', 3, 1, '23243'),
 ('9', '1748778778_81YIwoG-kGL.jpg', 'The art of money getting or, golden rules for making money', 'P. T. Barnum', 'Guttenburg', '2005', 270, 'The Art of Money Getting adalah panduan klasik tentang cara mencapai kesuksesan finansial, ditulis oleh showman dan pengusaha terkenal abad ke-19, P.T. Barnum. Dalam buku ini, Barnum membagikan prinsip-prinsip praktis dan etika dalam meraih kekayaan yang ia pelajari dari pengalaman hidupnya', 6, 3, '9886');
 
@@ -110,8 +110,8 @@ CREATE TABLE `denda` (
 --
 
 INSERT INTO `denda` (`id_denda`, `id_peminjaman`, `jumlah_denda_dikenakan`, `jumlah_telah_dibayar`, `tgl_transaksi_denda`, `status_denda`, `keterangan`, `created_at`) VALUES
-(2, 10, 65000.00, 65000.00, '2025-06-01', 'Lunas', 'minggu depan terakhir\nPembayaran Lanjutan: Rp 200.000 pada 01 Jun 2025 oleh Admin ID: 1.', '2025-06-01 04:00:14'),
-(4, 18, 80000.00, 14000.00, '2025-06-10', 'Belum Lunas', 'BUKU HILANG. buku hilang di jalan\nPembayaran Lanjutan: Rp 7.000 pada 10 Jun 2025.\nPembayaran Lanjutan: Rp 7.000 pada 10 Jun 2025.', '2025-06-10 09:43:32');
+(2, 10, '65000.00', '65000.00', '2025-06-01', 'Lunas', 'minggu depan terakhir\nPembayaran Lanjutan: Rp 200.000 pada 01 Jun 2025 oleh Admin ID: 1.', '2025-06-01 04:00:14'),
+(4, 18, '80000.00', '14000.00', '2025-06-10', 'Belum Lunas', 'BUKU HILANG. buku hilang di jalan\nPembayaran Lanjutan: Rp 7.000 pada 10 Jun 2025.\nPembayaran Lanjutan: Rp 7.000 pada 10 Jun 2025.', '2025-06-10 09:43:32');
 
 -- --------------------------------------------------------
 
@@ -168,10 +168,9 @@ CREATE TABLE `jurusan` (
 --
 
 INSERT INTO `jurusan` (`id_jurusan`, `nama_jurusan`) VALUES
-(1, 'Rpl'),
-(3, 'Akl'),
-(2, 'Tkj'),
-(4, 'Otkp');
+(1, 'RPL'),
+(3, 'TITL'),
+(2, 'TKJ');
 
 -- --------------------------------------------------------
 
@@ -241,8 +240,7 @@ INSERT INTO `peminjaman` (`id_peminjaman`, `id_siswa`, `id_buku`, `tgl_pinjam`, 
 (16, 1, '5', NULL, NULL, 'DIBATALKAN'),
 (17, 1, '4', NULL, NULL, 'DITOLAK'),
 (18, 1, '1', '2025-06-07', '2025-06-10', 'HILANG'),
-(19, 1, '6', NULL, NULL, 'DIBATALKAN'),
-(20, 5, '5', '2025-06-10', '2025-06-10', 'KEMBALI');
+(19, 1, '6', NULL, NULL, 'DIBATALKAN');
 
 -- --------------------------------------------------------
 
@@ -291,9 +289,9 @@ CREATE TABLE `siswa` (
 
 INSERT INTO `siswa` (`id_siswa`, `nisn`, `nama`, `username`, `password`, `jenis_kelamin`, `id_kelas`, `id_jurusan`, `no_tlp`, `tgl_daftar`, `email`) VALUES
 (1, '12345', 'Budi', 'budi', 'pwd123', 'L', 1, 1, '0898989898', '2025-05-20 22:56:06', 'abid.ays23456@gmail.com'),
-(3, '1785189', 'sasa', 'sasa', '$2y$10$DZNVmv4zK/TiTrarQ3.1tO/.6eiIebMIjSD5CoguAJdt6qgg0KCjK', 'P', 2, 2, '08715983151', '2025-06-01 20:13:18', NULL),
+(3, '1785189', 'sasak', 'sasa', '$2y$10$DZNVmv4zK/TiTrarQ3.1tO/.6eiIebMIjSD5CoguAJdt6qgg0KCjK', 'P', 2, 2, '08715983151', '2025-06-01 20:13:18', NULL),
 (4, '12516', 'loke', 'loke', '456', 'L', 2, 1, '0981827582', '2025-06-01 20:17:54', NULL),
-(5, '230411100191', 'M Sultan Abdurrahman', 'sultan', '123', 'L', 1, 2, '083123133839', '2025-06-10 16:36:42', NULL);
+(6, '230411100191', 'M Sultan Abdurrahman Al Zudas', 'sultan', '$2y$10$UEcMLEU7QYB.mSsXPrkKX.sENMYVTGthvu5cn28YVtbujfGPEm6Cq', 'L', 1, 2, '083123133839', '2025-06-12 09:07:50', 'sultanda06@gmail.com');
 
 --
 -- Indexes for dumped tables
@@ -430,7 +428,7 @@ ALTER TABLE `rating`
 -- AUTO_INCREMENT for table `siswa`
 --
 ALTER TABLE `siswa`
-  MODIFY `id_siswa` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_siswa` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables

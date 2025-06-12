@@ -1,22 +1,20 @@
 <?php
 session_start();
-require_once "../../connect.php"; // Sesuaikan path ke file koneksi database Anda
+require_once "../../connect.php"; // Sesuaikan path ke file koneksi Anda
 
-// Pastikan hanya admin yang login yang bisa mengakses halaman ini
-if (!isset($_SESSION['login']) || $_SESSION['role'] !== 'admin') {
-    header("Location: /libtera/login.php"); // Arahkan ke halaman login jika tidak sah
+// Pastikan hanya siswa yang login yang bisa mengakses halaman ini
+if (!isset($_SESSION['login']) || $_SESSION['role'] !== 'siswa') {
+    header("Location: /libtera/login.php");
     exit;
 }
 
 $message = '';
-$admin_id = $_SESSION['admin']['id']; // Ambil ID admin dari session
+// Asumsi nama kolom primary key adalah 'id_siswa'
+$siswa_id = $_SESSION['siswa']['id_siswa']; 
 
-// Logika untuk memproses form saat disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
-    $nama_admin = trim($_POST['nama_admin']);
-    $no_tlp = trim($_POST['no_tlp']);
-
+    
     $new_password = $_POST['new_password'];
     $confirm_password = $_POST['confirm_password'];
     $current_password = $_POST['current_password'];
@@ -27,15 +25,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Lakukan validasi hanya jika pengguna mencoba mengubah password
     if ($update_password) {
         // 1. Ambil password hash yang sekarang dari database
-        $stmt_check = mysqli_prepare($connect, "SELECT password FROM admin WHERE id = ?");
-        mysqli_stmt_bind_param($stmt_check, "i", $admin_id);
+        $stmt_check = mysqli_prepare($connect, "SELECT password FROM siswa WHERE id_siswa = ?");
+        mysqli_stmt_bind_param($stmt_check, "i", $siswa_id);
         mysqli_stmt_execute($stmt_check);
         $result = mysqli_stmt_get_result($stmt_check);
-        $admin_data = mysqli_fetch_assoc($result);
+        $siswa_data = mysqli_fetch_assoc($result);
         mysqli_stmt_close($stmt_check);
 
         // 2. Verifikasi password saat ini
-        if (!password_verify($current_password, $admin_data['password'])) {
+        if (!$siswa_data || !password_verify($current_password, $siswa_data['password'])) {
             $_SESSION['message'] = ['type' => 'danger', 'text' => 'Password saat ini yang Anda masukkan salah!'];
             $can_update = false;
         } 
@@ -51,21 +49,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($update_password) {
             // Jika password diubah
             $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-            $sql = "UPDATE admin SET username = ?, nama_admin = ?, no_tlp = ?, password = ? WHERE id = ?";
+            $sql = "UPDATE siswa SET username = ?, password = ? WHERE id_siswa = ?";
             $stmt_update = mysqli_prepare($connect, $sql);
-            mysqli_stmt_bind_param($stmt_update, "ssssi", $username, $nama_admin, $no_tlp, $hashed_password, $admin_id);
+            mysqli_stmt_bind_param($stmt_update, "ssi", $username, $hashed_password, $siswa_id);
         } else {
             // Jika password tidak diubah
-            $sql = "UPDATE admin SET username = ?, nama_admin = ?, no_tlp = ? WHERE id = ?";
+            $sql = "UPDATE siswa SET username = ? WHERE id_siswa = ?";
             $stmt_update = mysqli_prepare($connect, $sql);
-            mysqli_stmt_bind_param($stmt_update, "sssi", $username, $nama_admin, $no_tlp, $admin_id);
+            mysqli_stmt_bind_param($stmt_update, "si", $username, $siswa_id);
         }
 
         if (mysqli_stmt_execute($stmt_update)) {
-            // Update data di session agar tampilan langsung berubah
-            $_SESSION['admin']['username'] = $username;
-            $_SESSION['admin']['nama_admin'] = $nama_admin;
-            $_SESSION['admin']['no_tlp'] = $no_tlp;
+            // Update data username di session agar tampilan langsung berubah
+            $_SESSION['siswa']['username'] = $username;
             $_SESSION['message'] = ['type' => 'success', 'text' => 'Profil berhasil diperbarui!'];
         } else {
             $_SESSION['message'] = ['type' => 'danger', 'text' => 'Gagal memperbarui profil.'];
@@ -73,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mysqli_stmt_close($stmt_update);
     }
 
-    header("Location: editprofil_admin.php"); // Refresh halaman untuk menampilkan pesan
+    header("Location: editprofil_siswa.php");
     exit;
 }
 
@@ -89,32 +85,25 @@ if (isset($_SESSION['message'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profil Admin</title>
+    <title>Edit Profil Siswa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5 mb-5">
-        <h2>Edit Profil Admin</h2>
+        <h2>Edit Profil</h2>
+        <p class="text-muted">Halo, <?php echo htmlspecialchars($_SESSION['siswa']['nama']); ?>!</p>
         <hr>
         <?php if (!empty($message)): ?>
             <div class="alert alert-<?php echo htmlspecialchars($message['type']); ?>">
                 <?php echo htmlspecialchars($message['text']); ?>
             </div>
         <?php endif; ?>
-        <form action="editprofil_admin.php" method="POST">
-            <div class="mb-3">
-                <label for="nama_admin" class="form-label">Nama Admin</label>
-                <input type="text" class="form-control" id="nama_admin" name="nama_admin" value="<?php echo htmlspecialchars($_SESSION['admin']['nama_admin']); ?>" required>
-            </div>
+        <form action="editprofil_siswa.php" method="POST">
             <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($_SESSION['admin']['username']); ?>" required>
+                <input type="text" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($_SESSION['siswa']['username']); ?>" required>
             </div>
-            <div class="mb-3">
-                <label for="no_tlp" class="form-label">Nomor Telepon</label>
-                <input type="text" class="form-control" id="no_tlp" name="no_tlp" value="<?php echo htmlspecialchars($_SESSION['admin']['no_tlp']); ?>" required>
-            </div>
-
+            
             <h5 class="mt-4">Ubah Password</h5>
             <hr>
             <div class="mb-3">
@@ -131,7 +120,7 @@ if (isset($_SESSION['message'])) {
             </div>
 
             <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-            <a href="/libtera/Dashboard/Admin/index.php" class="btn btn-secondary">Kembali</a>
+            <a href="/libtera/Dashboard/Siswa/index.php" class="btn btn-secondary">Kembali</a>
         </form>
     </div>
 </body>

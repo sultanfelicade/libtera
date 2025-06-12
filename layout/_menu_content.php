@@ -1,17 +1,12 @@
 <?php
-// Ambil session role jika belum ada
-// Pastikan session sudah dimulai sebelumnya dengan session_start();
 if (session_status() == PHP_SESSION_NONE) {
-    session_start(); // Mulai session jika belum aktif
+    session_start();
 }
 $role = $_SESSION["role"] ?? 'siswa';
 
-// Fungsi sederhana untuk menentukan apakah link aktif
-// Sesuaikan logika ini jika struktur URL Anda berbeda
 if (!function_exists('isNavLinkActive')) {
     function isNavLinkActive($href) {
         $currentPath = strtok($_SERVER["REQUEST_URI"], '?');
-        // Menghapus trailing slash jika ada dari $currentPath dan $href untuk perbandingan yang lebih konsisten
         $normalizedCurrentPath = rtrim($currentPath, '/');
         $normalizedHref = rtrim($href, '/');
         return $normalizedCurrentPath === $normalizedHref;
@@ -50,7 +45,6 @@ if (!function_exists('isNavLinkActive')) {
             ["href" => "/libtera/Dashboard/Admin/formPeminjaman/peminjaman.php", "icon" => "fas fa-handshake", "text" => "Peminjaman"],
             ["href" => "/libtera/Dashboard/Admin/formPeminjaman/kelola_denda.php", "icon" => "fa-solid fa-money-bill-1-wave", "text" => "Kelola Denda"],
             ["href" => "/libtera/Dashboard/Admin/kelola_user.php", "icon" => "fa-solid fa-users", "text" => "Kelola Siswa"]
-            // Jika admin juga punya link AI yang perlu target blank, tambahkan 'target' => '_blank' di sini
         ];
         foreach ($menuAdmin as $item): ?>
             <li class="nav-item <?php echo isNavLinkActive($item['href']) ? 'active' : ''; ?>">
@@ -80,7 +74,7 @@ if (!function_exists('isNavLinkActive')) {
             </div>
         </div>
     </div>
-    <a class="btn btn-primary w-100 mb-2" href="/libtera/Dashboard/Admin/editprofil_admin.php">Edit Profil</a>
+    <a class="btn btn-primary w-100 mb-2" href="<?php echo ($role === 'admin') ? '/libtera/Dashboard/Admin/editprofil_admin.php' : '/libtera/Dashboard/Siswa/editprofil_siswa.php'; ?>">Edit Profil</a>
     <a class="btn btn-danger btn-sm sign-out-btn w-100" href="/libtera/logout.php">
         Sign Out <i class="fa-solid fa-right-from-bracket ms-1"></i>
     </a>

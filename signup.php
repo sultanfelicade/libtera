@@ -195,6 +195,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <button type="submit" class="btn btn-primary w-100">Daftar</button>
+      <a href="index.php" class="btn btn-secondary w-100 mt-2">Kembali ke Login</a>
+
     </form>
   </div>
 </div>

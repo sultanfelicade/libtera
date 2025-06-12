@@ -6,19 +6,20 @@ if (isset($_POST['signIn'])) {
   $username = strtolower(trim($_POST['username']));
   $password = $_POST['password'];
 
-  // Cek siswa
-  $querySiswa = mysqli_query($connect, "SELECT * FROM siswa WHERE username = '$username'");
-  if (mysqli_num_rows($querySiswa) === 1) {
-    $data = mysqli_fetch_assoc($querySiswa);
-    if ($password === $data['password']) {
-      $_SESSION['login'] = true;
-      $_SESSION['role'] = 'siswa';
-      $_SESSION['siswa'] = $data;             // Simpan data siswa lengkap
-      $_SESSION['id_siswa'] = $data['id_siswa']; // Simpan id_siswa langsung untuk kemudahan akses
-      header("Location: /libtera/Dashboard/Siswa/index.php");
-      exit;
-    }
+// Cek siswa
+$querySiswa = mysqli_query($connect, "SELECT * FROM siswa WHERE username = '$username'");
+if (mysqli_num_rows($querySiswa) === 1) {
+  $data = mysqli_fetch_assoc($querySiswa);
+  if (password_verify($password, $data['password'])) {  // Gunakan password_verify
+    $_SESSION['login'] = true;
+    $_SESSION['role'] = 'siswa';
+    $_SESSION['siswa'] = $data;
+    $_SESSION['id_siswa'] = $data['id_siswa'];
+    header("Location: /libtera/Dashboard/Siswa/index.php");
+    exit;
   }
+}
+
 
   // Cek admin
   $queryAdmin = mysqli_query($connect, "SELECT * FROM admin WHERE username = '$username'");

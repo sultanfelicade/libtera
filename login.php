@@ -14,7 +14,6 @@
       <h3 class="fw-bold mt-2">Sign In</h3>
       <p class="text-muted">Silakan login untuk melanjutkan</p>
     </div>
-
     <?php if (isset($_SESSION['success'])): ?>
       <div class="alert alert-success alert-dismissible fade show" role="alert">
         <?= $_SESSION['success']; unset($_SESSION['success']); ?>
@@ -48,10 +47,11 @@
     <!-- Tambahan: link daftar -->
     <div class="text-center mt-3">
       <p class="">Belum punya akun? <a href="signup.php">Daftar sekarang</a></p>
+      <a href="index.html" class="btn btn-outline-secondary btn-sm">← Kembali ke Dashboard</a>
     </div>
   </div>
 </div>
-
+<!-- Tambahan: tombol kembali ke dashboard -->
 <script>
   (function () {
     'use strict';

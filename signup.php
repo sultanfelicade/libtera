@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "NISN atau Username sudah terdaftar.";
         } else {
             // Hash password
-            $passwordHash = $password;
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
             // Insert data
             // Insert data

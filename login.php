@@ -43,19 +43,14 @@
 
       <button type="submit" name="signIn" class="btn btn-primary w-100">Sign In</button>
     </form>
+    
+    <a href="index.html" class="btn btn-outline-secondary w-100 mt-3">Halaman Depan</a>
 
-    <!-- Tambahan: link daftar -->
     <div class="text-center mt-3">
       <p class="">Belum punya akun? <a href="signup.php">Daftar sekarang</a></p>
     </div>
   </div>
 </div>
-
-<!-- Tombol HALAMAN DEPAN di luar card -->
-<div class="text-center mt-3">
-  <a href="index.html" class="btn btn-outline-primary btn-sm">HALAMAN DEPAN</a>
-</div>
-<!-- Tambahan: tombol kembali ke dashboard -->
 <script>
   (function () {
     'use strict';

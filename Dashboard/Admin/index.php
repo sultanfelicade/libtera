@@ -41,6 +41,8 @@ $kategoriOptions = getKategoriList($connect);
 
 // Proses Tambah Buku
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
+    
+    $id_buku_baru = uniqid('book_');
     $judul = trim($_POST['judul']);
     $pengarang = trim($_POST['pengarang']);
     $id_kategori = (int)$_POST['id_kategori'];
@@ -50,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
     $tahun_terbit = trim($_POST['tahun_terbit']);
     $stok = (int)$_POST['stok'];
     $cover_path = '';
+    $jumlah_halaman = 0; 
 
     if (empty($judul) || empty($pengarang) || empty($id_kategori) || empty($tahun_terbit) || $stok < 0) {
         $message = '<div class="alert alert-danger">Judul, Pengarang, Kategori, Tahun Terbit, dan Stok (harus >= 0) wajib diisi.</div>';
@@ -66,8 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
         }
 
         if (empty($message)) {
-            $stmt = $connect->prepare("INSERT INTO buku (judul, pengarang, id_kategori, deskripsi, isbn, penerbit, tahun_terbit, stok, cover) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssissssis", $judul, $pengarang, $id_kategori, $deskripsi, $isbn, $penerbit, $tahun_terbit, $stok, $cover_path);
+            $stmt = $connect->prepare("INSERT INTO buku (id_buku, judul, pengarang, id_kategori, deskripsi, isbn, penerbit, tahun_terbit, jumlah_halaman, stok, cover) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssissssiis", $id_buku_baru, $judul, $pengarang, $id_kategori, $deskripsi, $isbn, $penerbit, $tahun_terbit, $jumlah_halaman, $stok, $cover_path);
+            
             if ($stmt->execute()) {
                 $_SESSION['success_message'] = "Buku \"" . htmlspecialchars($judul) . "\" berhasil ditambahkan!";
                 header("Location: index.php");

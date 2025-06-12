@@ -80,7 +80,8 @@ if (!function_exists('isNavLinkActive')) {
             </div>
         </div>
     </div>
-    <a class="btn btn-primary w-100 mb-2" href="/libtera/editprofil.php">Edit Profil</a> <a class="btn btn-danger btn-sm sign-out-btn w-100" href="/libtera/logout.php">
+    <a class="btn btn-primary w-100 mb-2" href="/libtera/Dashboard/Admin/editprofil_admin.php">Edit Profil</a>
+    <a class="btn btn-danger btn-sm sign-out-btn w-100" href="/libtera/logout.php">
         Sign Out <i class="fa-solid fa-right-from-bracket ms-1"></i>
     </a>
 </div>

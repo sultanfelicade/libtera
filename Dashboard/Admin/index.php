@@ -206,6 +206,7 @@ $id_buku_url = $_GET['id'] ?? null;
 
 <div class="container-fluid mt-4">
     <h1 class="h2 mb-4">Kelola Data Buku</h1>
+
     <?= $message ?> 
     <?php if ($action_form === 'add' || ($action_form === 'edit' && $id_buku_url)): ?>
         <?php

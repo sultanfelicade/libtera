@@ -1,21 +1,17 @@
 <?php
-// File: Dashboard/Admin/kelola_user.php (atau path yang kamu inginkan)
 ob_start();
 session_start();
 
-// --- Autentikasi Admin ---
 if (!isset($_SESSION['admin']) || !isset($_SESSION['admin']['id'])) {
     $_SESSION['error_message_admin_auth'] = "Sesi admin tidak ditemukan. Silakan login kembali sebagai admin.";
-    header("Location: /libtera/login_admin.php"); // Sesuaikan path login admin Anda
+    header("Location: /libtera/login_admin.php");
     exit;
 }
 $id_admin_logged_in = (int)$_SESSION['admin']['id'];
-// --- End Autentikasi Admin ---
 
 $title = "Kelola Pengguna Siswa - Libtera Admin";
-require __DIR__ . '/../../connect.php'; // Koneksi ke database
+require __DIR__ . '/../../connect.php';
 
-// Inisialisasi variabel
 $search_term = isset($_GET['search']) ? trim($_GET['search']) : '';
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 $edit_id_siswa = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -26,7 +22,6 @@ $pesan_error = $_SESSION['pesan_error_user'] ?? null;
 if (isset($_SESSION['pesan_sukses_user'])) unset($_SESSION['pesan_sukses_user']);
 if (isset($_SESSION['pesan_error_user'])) unset($_SESSION['pesan_error_user']);
 
-// Ambil data kelas dan jurusan untuk dropdown
 $daftar_kelas = [];
 $result_kelas = $connect->query("SELECT id_kelas, nama_kelas FROM kelas ORDER BY nama_kelas ASC");
 if ($result_kelas) {
@@ -39,28 +34,24 @@ if ($result_jurusan) {
     $daftar_jurusan = $result_jurusan->fetch_all(MYSQLI_ASSOC);
 }
 
-
-// --- Handle Aksi POST (Edit atau Hapus) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Dianjurkan menggunakan CSRF token di sini
     if (isset($_POST['update_siswa'])) {
         $id_siswa_update = filter_input(INPUT_POST, 'id_siswa_update', FILTER_VALIDATE_INT);
         $nisn = filter_input(INPUT_POST, 'nisn', FILTER_SANITIZE_NUMBER_INT);
-        $nama = trim(filter_input(INPUT_POST, 'nama', FILTER_SANITIZE_STRING));
-        $username = strtolower(trim(filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING)));
-        $password_baru = $_POST['password_baru']; // Jangan trim password
-        $jenis_kelamin = filter_input(INPUT_POST, 'jenis_kelamin', FILTER_SANITIZE_STRING);
+        $nama = htmlspecialchars(trim($_POST['nama'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $username = strtolower(htmlspecialchars(trim($_POST['username'] ?? ''), ENT_QUOTES, 'UTF-8'));
+        $password_baru = $_POST['password_baru'];
+        $jenis_kelamin = htmlspecialchars($_POST['jenis_kelamin'] ?? '', ENT_QUOTES, 'UTF-8');
         $id_kelas = filter_input(INPUT_POST, 'id_kelas', FILTER_VALIDATE_INT);
         $id_jurusan = filter_input(INPUT_POST, 'id_jurusan', FILTER_VALIDATE_INT);
-        $no_tlp = trim(filter_input(INPUT_POST, 'no_tlp', FILTER_SANITIZE_STRING));
+        $no_tlp = htmlspecialchars(trim($_POST['no_tlp'] ?? ''), ENT_QUOTES, 'UTF-8');
 
         if ($id_siswa_update && $nisn && $nama && $username && $jenis_kelamin && $id_kelas && $id_jurusan) {
             $sql_update = "UPDATE siswa SET nisn = ?, nama = ?, username = ?, jenis_kelamin = ?, id_kelas = ?, id_jurusan = ?, no_tlp = ?";
-            $types_update = "isssiiss";
+            $types_update = "isssiis";
             $params_update = [$nisn, $nama, $username, $jenis_kelamin, $id_kelas, $id_jurusan, $no_tlp];
 
             if (!empty($password_baru)) {
-                // PENTING: HASH PASSWORD BARU!
                 $hashed_password = password_hash($password_baru, PASSWORD_DEFAULT);
                 if ($hashed_password === false) {
                     $_SESSION['pesan_error_user'] = "Gagal melakukan hashing password.";
@@ -74,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $types_update .= "i";
             $params_update[] = $id_siswa_update;
 
-            if (!isset($_SESSION['pesan_error_user'])) { // Lanjut jika tidak ada error hashing
+            if (!isset($_SESSION['pesan_error_user'])) {
                 $stmt_update = $connect->prepare($sql_update);
                 if ($stmt_update) {
                     $stmt_update->bind_param($types_update, ...$params_update);
@@ -91,14 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $_SESSION['pesan_error_user'] = "Semua field yang wajib diisi (kecuali password baru) harus diisi dengan benar.";
         }
-        header("Location: " . $_SERVER['PHP_SELF'] . "?search=" . urlencode($search_term)); // Redirect kembali ke halaman dengan search term jika ada
+        header("Location: " . $_SERVER['PHP_SELF'] . "?search=" . urlencode($search_term));
         exit;
 
     } elseif (isset($_POST['hapus_siswa'])) {
         $id_siswa_hapus = filter_input(INPUT_POST, 'id_siswa_hapus', FILTER_VALIDATE_INT);
         if ($id_siswa_hapus) {
-            // PERHATIAN: Pertimbangkan konsekuensi menghapus siswa jika ada data terkait (peminjaman, dll.)
-            // Anda mungkin perlu menonaktifkan akun daripada menghapus, atau menangani foreign key constraints.
             $sql_delete = "DELETE FROM siswa WHERE id_siswa = ?";
             $stmt_delete = $connect->prepare($sql_delete);
             if ($stmt_delete) {
@@ -120,10 +109,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// --- Jika action=edit, ambil data siswa yang akan diedit ---
 if ($action === 'edit' && $edit_id_siswa > 0) {
-    $sql_edit = "SELECT id_siswa, nisn, nama, username, jenis_kelamin, id_kelas, id_jurusan, no_tlp 
-                 FROM siswa WHERE id_siswa = ?";
+    $sql_edit = "SELECT id_siswa, nisn, nama, username, jenis_kelamin, id_kelas, id_jurusan, no_tlp FROM siswa WHERE id_siswa = ?";
     $stmt_edit = $connect->prepare($sql_edit);
     if ($stmt_edit) {
         $stmt_edit->bind_param("i", $edit_id_siswa);
@@ -137,26 +124,17 @@ if ($action === 'edit' && $edit_id_siswa > 0) {
             exit;
         }
     } else {
-         $_SESSION['pesan_error_user'] = "Gagal menyiapkan data untuk edit: " . $connect->error;
+        $_SESSION['pesan_error_user'] = "Gagal menyiapkan data untuk edit: " . $connect->error;
     }
 }
 
-
-// --- Ambil Daftar Siswa (dengan filter pencarian jika ada) ---
-$sql_list_siswa = "SELECT s.id_siswa, s.nisn, s.nama, s.username, s.jenis_kelamin, 
-                          k.nama_kelas, j.nama_jurusan, s.no_tlp, s.tgl_daftar
-                   FROM siswa s
-                   LEFT JOIN kelas k ON s.id_kelas = k.id_kelas
-                   LEFT JOIN jurusan j ON s.id_jurusan = j.id_jurusan";
+$sql_list_siswa = "SELECT s.id_siswa, s.nisn, s.nama, s.username, s.jenis_kelamin, k.nama_kelas, j.nama_jurusan, s.no_tlp, s.tgl_daftar FROM siswa s LEFT JOIN kelas k ON s.id_kelas = k.id_kelas LEFT JOIN jurusan j ON s.id_jurusan = j.id_jurusan";
 $params_list = [];
 $types_list = "";
 $conditions_list = [];
 
 if (!empty($search_term)) {
     $like_search = "%" . $search_term . "%";
-    // Perhatikan tipe data NISN, jika INT, LIKE pada angka mungkin tidak optimal.
-    // Lebih baik search by NISN eksak jika memungkinkan atau pastikan kolom NISN di DB adalah VARCHAR jika mau LIKE.
-    // Untuk sekarang, kita cast NISN ke CHAR untuk LIKE.
     $conditions_list[] = "(s.nama LIKE ? OR CAST(s.nisn AS CHAR) LIKE ? OR s.username LIKE ?)";
     $params_list[] = $like_search; $types_list .= "s";
     $params_list[] = $like_search; $types_list .= "s";
@@ -167,7 +145,6 @@ if (!empty($conditions_list)) {
     $sql_list_siswa .= " WHERE " . implode(" AND ", $conditions_list);
 }
 $sql_list_siswa .= " ORDER BY s.nama ASC";
-// Tambahkan LIMIT dan OFFSET di sini untuk pagination jika datanya banyak
 
 $stmt_list_siswa = $connect->prepare($sql_list_siswa);
 $data_siswa_list = [];
@@ -185,7 +162,6 @@ if ($stmt_list_siswa) {
 } else {
     $pesan_error = (isset($pesan_error) ? $pesan_error . " | " : "") . "Gagal menyiapkan statement daftar siswa: " . $connect->error;
 }
-
 
 include_once __DIR__ . '/../../layout/header.php';
 ?>
@@ -282,7 +258,6 @@ include_once __DIR__ . '/../../layout/header.php';
     </div>
     <?php endif; ?>
 
-
     <div class="card shadow-sm">
         <div class="card-header">
             <h5 class="mb-0"><i class="fas fa-list me-2"></i>Daftar Siswa</h5>
@@ -347,7 +322,7 @@ include_once __DIR__ . '/../../layout/header.php';
                         </tbody>
                     </table>
                 </div>
-                <?php endif; ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 6.0.0-dev+20241213.325760150e
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jun 12, 2025 at 06:20 PM
+-- Generation Time: Jun 13, 2025 at 11:19 AM
 -- Server version: 8.0.30
--- PHP Version: 8.1.10
+-- PHP Version: 8.4.1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -110,8 +110,8 @@ CREATE TABLE `denda` (
 --
 
 INSERT INTO `denda` (`id_denda`, `id_peminjaman`, `jumlah_denda_dikenakan`, `jumlah_telah_dibayar`, `tgl_transaksi_denda`, `status_denda`, `keterangan`, `created_at`) VALUES
-(2, 10, '65000.00', '65000.00', '2025-06-01', 'Lunas', 'minggu depan terakhir\nPembayaran Lanjutan: Rp 200.000 pada 01 Jun 2025 oleh Admin ID: 1.', '2025-06-01 04:00:14'),
-(4, 18, '80000.00', '14000.00', '2025-06-10', 'Belum Lunas', 'BUKU HILANG. buku hilang di jalan\nPembayaran Lanjutan: Rp 7.000 pada 10 Jun 2025.\nPembayaran Lanjutan: Rp 7.000 pada 10 Jun 2025.', '2025-06-10 09:43:32');
+(2, 10, 65000.00, 65000.00, '2025-06-01', 'Lunas', 'minggu depan terakhir\nPembayaran Lanjutan: Rp 200.000 pada 01 Jun 2025 oleh Admin ID: 1.', '2025-06-01 04:00:14'),
+(4, 18, 80000.00, 14000.00, '2025-06-10', 'Belum Lunas', 'BUKU HILANG. buku hilang di jalan\nPembayaran Lanjutan: Rp 7.000 pada 10 Jun 2025.\nPembayaran Lanjutan: Rp 7.000 pada 10 Jun 2025.', '2025-06-10 09:43:32');
 
 -- --------------------------------------------------------
 
@@ -240,7 +240,12 @@ INSERT INTO `peminjaman` (`id_peminjaman`, `id_siswa`, `id_buku`, `tgl_pinjam`, 
 (16, 1, '5', NULL, NULL, 'DIBATALKAN'),
 (17, 1, '4', NULL, NULL, 'DITOLAK'),
 (18, 1, '1', '2025-06-07', '2025-06-10', 'HILANG'),
-(19, 1, '6', NULL, NULL, 'DIBATALKAN');
+(19, 1, '6', NULL, NULL, 'DIBATALKAN'),
+(21, 6, '9', NULL, NULL, 'DIBATALKAN'),
+(22, 6, '5', '2025-05-13', NULL, 'PINJAM'),
+(23, 6, '7', NULL, NULL, 'DITOLAK'),
+(24, 7, '5', NULL, NULL, 'PENDING'),
+(25, 7, '4', '2025-05-10', NULL, 'PINJAM');
 
 -- --------------------------------------------------------
 
@@ -261,7 +266,8 @@ CREATE TABLE `rating` (
 
 INSERT INTO `rating` (`id_rating`, `id_siswa`, `id_buku`, `nilai_rating`) VALUES
 (1, 1, '5', 5),
-(3, 1, '1', 3);
+(3, 1, '1', 3),
+(4, 6, '5', 2);
 
 -- --------------------------------------------------------
 
@@ -289,9 +295,9 @@ CREATE TABLE `siswa` (
 
 INSERT INTO `siswa` (`id_siswa`, `nisn`, `nama`, `username`, `password`, `jenis_kelamin`, `id_kelas`, `id_jurusan`, `no_tlp`, `tgl_daftar`, `email`) VALUES
 (1, '12345', 'Budi', 'budi', 'pwd123', 'L', 1, 1, '0898989898', '2025-05-20 22:56:06', 'abid.ays23456@gmail.com'),
-(3, '1785189', 'sasak', 'sasa', '$2y$10$DZNVmv4zK/TiTrarQ3.1tO/.6eiIebMIjSD5CoguAJdt6qgg0KCjK', 'P', 2, 2, '08715983151', '2025-06-01 20:13:18', NULL),
 (4, '12516', 'loke', 'loke', '456', 'L', 2, 1, '0981827582', '2025-06-01 20:17:54', NULL),
-(6, '230411100191', 'M Sultan Abdurrahman Al Zudas', 'sultan', '$2y$10$UEcMLEU7QYB.mSsXPrkKX.sENMYVTGthvu5cn28YVtbujfGPEm6Cq', 'L', 1, 2, '083123133839', '2025-06-12 09:07:50', 'sultanda06@gmail.com');
+(6, '230411100191', 'M Sultan Abdurrahman Al Zudas', 'sultan', '$2y$10$UEcMLEU7QYB.mSsXPrkKX.sENMYVTGthvu5cn28YVtbujfGPEm6Cq', 'L', 1, 2, '083123133839', '2025-06-12 09:07:50', 'sultanda06@gmail.com'),
+(7, '240411100042', 'Abid Ayyasy', 'abid', '$2y$12$MNN7rT8.pCtCfgh2w.HHveem.4A6CgKpXCekDttd76slW.a0ihfSW', 'L', 1, 2, '083123133839', '2025-06-13 17:41:08', 'sultanzudas@gmail.com');
 
 --
 -- Indexes for dumped tables
@@ -416,19 +422,19 @@ ALTER TABLE `kelas`
 -- AUTO_INCREMENT for table `peminjaman`
 --
 ALTER TABLE `peminjaman`
-  MODIFY `id_peminjaman` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id_peminjaman` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `rating`
 --
 ALTER TABLE `rating`
-  MODIFY `id_rating` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_rating` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `siswa`
 --
 ALTER TABLE `siswa`
-  MODIFY `id_siswa` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_siswa` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables

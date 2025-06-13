@@ -28,17 +28,23 @@ $role = $_SESSION["role"];
 </head>
 <body class="d-flex flex-column min-vh-100 bg-light">
 
-<nav class="navbar bg-body-tertiary fixed-top shadow-sm d-lg-none navbar-mobile">
+<nav class="navbar navbar-light bg-body-tertiary fixed-top shadow-sm d-lg-none navbar-mobile">
   <div class="container-fluid">
     <a class="navbar-brand" href="/libtera/index.php">
       <img src="/libtera/assets/logoFooter.png" alt="logo" style="max-height: 40px;">
     </a>
+
+    <!-- Tombol toggle dengan ikon gelap -->
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
+
+    <!-- Offcanvas menu -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar">
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title"><?php echo $role === 'admin' ? 'Menu Admin' : 'Menu Siswa'; ?></h5>
+        <h5 class="offcanvas-title">
+          <?php echo $role === 'admin' ? 'Menu Admin' : 'Menu Siswa'; ?>
+        </h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div class="offcanvas-body">
@@ -46,7 +52,7 @@ $role = $_SESSION["role"];
       </div>
     </div>
   </div>
-</nav>
+</nav>>
 
 <div class="sidebar d-none d-lg-block shadow-sm">
     <div class="text-center mb-4">
